@@ -34,6 +34,7 @@ parser.add_argument('--word-value', type=str, default='all')
 parser.add_argument('--stim', type=str, default='Podcast')
 parser.add_argument('--embeddings', type=str, default='gpt2xl-50d')
 parser.add_argument('--pilot', type=str, default='')
+parser.add_argument('--lags', nargs='+', type=int)
 parser.add_argument('--outName', type=str, default='no-numba-test-tiger')
 parser.add_argument('--sig-elec-name', type=str, default=None)
 parser.add_argument('--nonWords', action='store_false', default=True)
@@ -41,7 +42,7 @@ parser.add_argument(
     '--datum-emb-fn',
     type=str,
     default='podcast-datum-gpt2-xl-c_1024-previous-pca_50d.csv')
-parser.add_argument('--sid', type=int, default=661)
+parser.add_argument('--sid', type=int, default=None)
 parser.add_argument('--gpt2', type=int, default=None)
 parser.add_argument('--bert', type=int, default=None)
 parser.add_argument('--bart', type=int, default=None)
@@ -50,8 +51,10 @@ parser.add_argument('--electrode', type=int, default=None)
 parser.add_argument('--npermutations', type=int, default=5000)
 args = parser.parse_args()
 
+raise Exception(args)
 if not args.sid:
     print('Enter a valid subject ID')
+    sys.exit()
 else:
     sid = 'NY' + str(args.sid) + '_111_Part1_conversation1'
 
@@ -68,8 +71,6 @@ else:
     conv_dir = os.path.join(PROJ_DIR,
                             'conversation_space/crude-conversations/Podcast',
                             str(args.sid), '/')
-
-lags = np.arange(-2000, 2001, 100)
 
 if args.electrode is None:
     i = 1
@@ -144,60 +145,59 @@ if not os.path.isfile(elecDir + name + '_perm.csv'):
             args.datum_emb_fn)
 
     df = pd.read_csv(datumName, header=0)
-    d2 = df
 
-    # print(d2.shape)
+    # print(df.shape)
     if args.nonWords:
-        d2 = d2[d2.is_nonword == 0]
+        df = df[df.is_nonword == 0]
     if args.gpt2:
-        d2 = d2[d2.in_gpt2 == 1]
+        df = df[df.in_gpt2 == 1]
     if args.bert:
-        d2 = d2[d2.in_bert == 1]
+        df = df[df.in_bert == 1]
     if args.bart:
-        d2 = d2[d2.in_bart == 1]
+        df = df[df.in_bart == 1]
     if args.glove:
-        d2 = d2[d2.in_glove == 1]
+        df = df[df.in_glove == 1]
 
-    # d2 = d2[d2.in_roberta == 1]
+    # df = df[df.in_roberta == 1]
 
-    df_cols = d2.columns.tolist()
+    df_cols = df.columns.tolist()
     embedding_columns = df_cols[df_cols.index('0'):]
-    d2 = d2[~d2['word'].isin(['sp', '{lg}', '{ns}', '{inaudible}'])]
-    d2 = d2.dropna()
+    df = df[~df['word'].isin(['sp', '{lg}', '{ns}', '{inaudible}'])]
+    df = df.dropna()
 
-    d2['embeddings'] = d2[embedding_columns].values.tolist()
-    d2 = d2.drop(columns=embedding_columns)
+    df['embeddings'] = df[embedding_columns].values.tolist()
+    df = df.drop(columns=embedding_columns)
 
     if args.word_value == 'bottom':
-        d2 = d2.dropna(subset=['gpt2_xl_target_prob', 'human_target_prob'])
+        df = df.dropna(subset=['gpt2_xl_target_prob', 'human_target_prob'])
         denom = 3
         if args.pilot == 'GPT2':
-            pred = d2.gpt2_xl_target_prob
+            pred = df.gpt2_xl_target_prob
         elif args.pilot == 'mturk':
-            pred = d2.human_target_prob
+            pred = df.human_target_prob
         m = sorted(pred)
         med = statistics.median(m)
-        datum = d2[
+        datum = df[
             pred <= m[np.ceil(len(m) / denom)],
             ['word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings']]
     elif args.word_value == 'all':
-        datum = d2[[
+        datum = df[[
             'word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings'
         ]]
     else:
-        d2 = d2.dropna(subset=['gpt2_xl_target_prob', 'human_target_prob'])
+        df = df.dropna(subset=['gpt2_xl_target_prob', 'human_target_prob'])
         denom = 3
         if args.pilot == 'GPT2':
-            pred = d2.gpt2_xl_target_prob
+            pred = df.gpt2_xl_target_prob
         elif args.pilot == 'mturk':
-            pred = d2.human_target_prob
+            pred = df.human_target_prob
         m = sorted(pred)
         med = statistics.median(m)
-        datum = d2[
+        datum = df[
             pred >= m[len(m) - np.ceil(len(m) / denom)],
             ['word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings']]
 
-    X, Y = build_XY(datum, elec_signal, lags, 512)
+    X, Y = build_XY(datum, elec_signal, args.lags, 512)
 
     prod_X = X[datum.speaker == 'Speaker1', :]
     comp_X = X[datum.speaker == 'Speaker2', :]

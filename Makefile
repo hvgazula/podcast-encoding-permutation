@@ -26,7 +26,7 @@ E_LIST := $(shell seq 950 987) # GLoVe 5000: -1000 to -100ms (0.05 sig)
 E_LIST := $(shell seq 2500 2560) # bert bert50d-glove50d-diff-sig-elec-01-116-abs
 E_LIST := $(shell seq 2600 2673) # gpt2-glove-50d-previous-diff-sig-elec-01-116
 E_LIST := $(shell seq 800 915) # 116 - GLoVe 5000 (0.01 sig)
-E_LIST := $(shell seq 1 5)
+E_LIST := $(shell seq 1)
 
 # 116 - 717
 # E_LIST=10 27 36 37 38 4 47 112 113 114 116 117 119 120 121 122 126 71 74 75 \
@@ -52,14 +52,33 @@ PD = $(shell echo ${PRED_COL} | head -c 4)
 DS := podcast-datum-glove-50d.csv
 DS := podcast-datum-gpt2-xl-c_1024-previous-pca_50d.csv
 
+SID := 661
 SE := 5000-sig-elec-50d-onethresh-01.csv
 NW := nonWords
 WV := all
+NP := 5000
+LAGS := {-2000..2000..25}
 # --sig-elec-name $(SE) \
 
-# submit on the cluster
+# submit on the cluster (one job for each electrode)
+CMD := python
 run-perm-cluster:
-	CMD := sbatch submit.sh
+	for elec in $(E_LIST); do \
+		$(CMD) podcast-$(FILE).py \
+			--sid $(SID) \
+			--datum-emb-fn $(DS) \
+			--word-value $(WV) \
+			--$(NW) \
+			--glove 1 \
+			--electrode $$elec \
+			--npermutations $(NP) \
+			--lags $(LAGS) \
+			--outName $(SID)-$(USR)-test1; \
+	done
+
+# submit on the command line
+run-perm-cmd:
+	CMD := python
 	for elec in $(E_LIST); do \
 		$(CMD) podcast-$(FILE).py \
 			--sid 661 \
@@ -68,12 +87,13 @@ run-perm-cluster:
 			--$(NW) \
 			--glove 1 \
 			--electrode $$elec \
-			--outName $(SID)-$(USR)-test1; \
+			--outName $(SID)-$(USR)-test1 & \
 	done
 
-# submit on the command line
+
+# All electrodes in one job
 run-perm-cmd:
-	CMD := python
+	CMD := sbatch submit.sh
 	for elec in $(E_LIST); do \
 		$(CMD) podcast-$(FILE).py \
 			--sid 661 \
