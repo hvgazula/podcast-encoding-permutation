@@ -13,7 +13,6 @@ from scipy.io import loadmat
 
 from podcast_encoding_permutation_utils import build_XY, encode_lags_numba
 
-np.random.seed(0)
 start_time = datetime.now()
 print(f'Start Time: {start_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
 
@@ -21,14 +20,12 @@ hostname = os.environ['HOSTNAME']
 
 if 'tiger' in hostname:
     PROJ_DIR = '/projects/HASSON/247/data/podcast'
-    EMB_DIR = os.path.join(PROJ_DIR, os.pardir, 'embeddings')
     LOG_DIR = '/scratch/gpfs/hgazula/perm_test'
     tiger = 1
 elif 'scotty' in hostname:
     PROJ_DIR = '/mnt/bucket/labs/hasson/ariel/247/'
     # LOG_DIR = os.path.join(PROJ_DIR, 'models/encoding/bobbi/perm_tests/')
     LOG_DIR = os.environ['HOME']
-    EMB_DIR = os.path.join(PROJ_DIR, 'models/embeddings/')
     tiger = 0
 
 parser = argparse.ArgumentParser()
@@ -50,6 +47,7 @@ parser.add_argument('--bert', type=int, default=None)
 parser.add_argument('--bart', type=int, default=None)
 parser.add_argument('--glove', type=int, default=1)
 parser.add_argument('--electrode', type=int, default=None)
+parser.add_argument('--npermutations', type=int, default=5000)
 args = parser.parse_args()
 
 if not args.sid:
@@ -78,7 +76,7 @@ i = args.electrode
 if isinstance(sig_elec, int):
     if tiger:
         conv_dir = os.path.join(PROJ_DIR, sid)
-        brain_dir = os.path.join(conv_dir, 'preprocessed-highgamma')
+        brain_dir = os.path.join(conv_dir, 'preprocessed')
     else:
         conv_dir = os.path.join(
             PROJ_DIR, 'conversation_space/crude-conversations/Podcast', sid)
@@ -91,7 +89,7 @@ else:
     sid = sig_elec[i][:29]
     if tiger:
         conv_dir = os.path.join(PROJ_DIR, sid)
-        brain_dir = os.path.join(conv_dir, 'preprocessed-highgamma')
+        brain_dir = os.path.join(conv_dir, 'preprocessed')
     else:
         conv_dir = os.path.join(
             PROJ_DIR, 'conversation_space/crude-conversations/Podcast', sid)
@@ -206,14 +204,18 @@ if not os.path.isfile(elecDir + name + '_perm.csv'):
 
     # run permutation
     if prod_X.shape[0]:
-        permx = np.stack(
-            [encode_lags_numba(prod_X, prod_Y) for _ in range(2500)])
+        permx = np.stack([
+            encode_lags_numba(prod_X, prod_Y)
+            for _ in range(args.npermutations)
+        ])
     else:
         print('Not encoding production due to lack of examples')
 
     if comp_X.shape[0]:
-        permx = np.stack(
-            [encode_lags_numba(comp_X, comp_Y) for _ in range(1000)])
+        permx = np.stack([
+            encode_lags_numba(comp_X, comp_Y)
+            for _ in range(args.npermutations)
+        ])
     else:
         print('Not encoding comprehension due to lack of examples')
 
@@ -223,5 +225,6 @@ if not os.path.isfile(elecDir + name + '_perm.csv'):
         csvwriter.writerows(permx)
 
 end_time = datetime.now()
+
 print(f'End Time: {end_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
 print(f'Total runtime: {end_time - start_time} (HH:MM:SS)')

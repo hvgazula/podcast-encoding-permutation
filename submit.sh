@@ -5,11 +5,8 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --ntasks-per-socket=1
-##SBATCH --gres=gpu:1
 #SBATCH -o '%A.out'
 #SBATCH -e '%A.err'
-
-# You can use `salloc --gres=gpu:1 --time 01:10:00` to test something
 
 # module load anacondapy
 # source activate srm
@@ -26,7 +23,7 @@ source activate torch-env
 
 echo 'Requester:' $USER
 echo 'Node:' $HOSTNAME
-echo 'Start time:' `date`
+# echo 'Start time:' `date`
 echo "$@"
 python "$@"
-echo 'End time:' `date`
+# echo 'End time:' `date`

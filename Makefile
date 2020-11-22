@@ -1,7 +1,7 @@
 CMD := echo
 CMD := sbatch submit.sh
 # CMD := python
-FILE := encoding-permutation1
+FILE := encoding-permutation
 
 # username
 USR := $(shell whoami | head -c 2)
@@ -26,7 +26,7 @@ E_LIST := $(shell seq 950 987) # GLoVe 5000: -1000 to -100ms (0.05 sig)
 E_LIST := $(shell seq 2500 2560) # bert bert50d-glove50d-diff-sig-elec-01-116-abs
 E_LIST := $(shell seq 2600 2673) # gpt2-glove-50d-previous-diff-sig-elec-01-116
 E_LIST := $(shell seq 800 915) # 116 - GLoVe 5000 (0.01 sig)
-E_LIST := $(shell seq 1 50)
+E_LIST := $(shell seq 1 5)
 
 # 116 - 717
 # E_LIST=10 27 36 37 38 4 47 112 113 114 116 117 119 120 121 122 126 71 74 75 \
@@ -57,7 +57,23 @@ NW := nonWords
 WV := all
 # --sig-elec-name $(SE) \
 
-run-perm:
+# submit on the cluster
+run-perm-cluster:
+	CMD := sbatch submit.sh
+	for elec in $(E_LIST); do \
+		$(CMD) podcast-$(FILE).py \
+			--sid 661 \
+			--datum-emb-fn $(DS) \
+			--word-value $(WV) \
+			--$(NW) \
+			--glove 1 \
+			--electrode $$elec \
+			--outName $(SID)-$(USR)-test1; \
+	done
+
+# submit on the command line
+run-perm-cmd:
+	CMD := python
 	for elec in $(E_LIST); do \
 		$(CMD) podcast-$(FILE).py \
 			--sid 661 \
