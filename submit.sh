@@ -8,17 +8,21 @@
 #SBATCH -o '%A.out'
 #SBATCH -e '%A.err'
 
-# module load anacondapy
-# source activate srm
-
-module load anaconda
-source activate torch-env
-
-# if [[ -v SLURM_ARRAY_TASK_ID ]]
+# if [[ "$HOSTNAME" == *"tiger"* ]]
 # then
-#     ELECTRODE=$SLURM_ARRAY_TASK_ID
+#     echo "It's tiger"
+#     module load anaconda
+#     source activate torch-env
 # else
-#     ELECTRODE=1234
+#     module load anacondapy
+#     source activate srm
+# fi
+
+# if [[ "$HOSTNAME" == *"tiger"* ]]
+# then
+#     echo "It's tiger"
+#     # module load anaconda
+#     # source activate torch-env
 # fi
 
 echo 'Requester:' $USER

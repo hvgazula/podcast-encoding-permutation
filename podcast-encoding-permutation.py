@@ -20,7 +20,7 @@ hostname = os.environ['HOSTNAME']
 
 if 'tiger' in hostname:
     PROJ_DIR = '/projects/HASSON/247/data/podcast'
-    LOG_DIR = '/scratch/gpfs/hgazula/perm_test'
+    LOG_DIR = os.getcwd()
     tiger = 1
 elif 'scotty' in hostname:
     PROJ_DIR = '/mnt/bucket/labs/hasson/ariel/247/'
@@ -71,7 +71,10 @@ else:
 
 lags = np.arange(-2000, 2001, 100)
 
-i = args.electrode
+if args.electrode is None:
+    i = 1
+else:
+    i = args.electrode
 
 if isinstance(sig_elec, int):
     if tiger:
