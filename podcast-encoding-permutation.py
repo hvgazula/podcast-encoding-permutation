@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from scipy.io import loadmat
 
-from podcast_encoding_permutation_utils import build_XY, encode_lags_numba1
+from podcast_encoding_permutation_utils import build_XY, encode_lags_numba
 
 np.random.seed(0)
 start_time = datetime.now()
@@ -207,13 +207,13 @@ if not os.path.isfile(elecDir + name + '_perm.csv'):
     # run permutation
     if prod_X.shape[0]:
         permx = np.stack(
-            [encode_lags_numba1(prod_X, prod_Y) for _ in range(2500)])
+            [encode_lags_numba(prod_X, prod_Y) for _ in range(2500)])
     else:
         print('Not encoding production due to lack of examples')
 
     if comp_X.shape[0]:
         permx = np.stack(
-            [encode_lags_numba1(comp_X, comp_Y) for _ in range(1000)])
+            [encode_lags_numba(comp_X, comp_Y) for _ in range(1000)])
     else:
         print('Not encoding comprehension due to lack of examples')
 

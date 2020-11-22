@@ -1,5 +1,4 @@
 import numpy as np
-
 from scipy import signal, stats
 from sklearn.model_selection import KFold
 
@@ -84,7 +83,6 @@ def cv_lm_003(X, Y, kfolds):
     return YHAT
 
 
-# @jit(nopython=True)
 def fit_model(Xtra, Ytra):
     lamb = 1
     XtX_lamb = Xtra.T.dot(Xtra) + lamb * np.eye(Xtra.shape[1])
@@ -93,97 +91,16 @@ def fit_model(Xtra, Ytra):
     return B
 
 
-def encode_lags(datum, brain_signal, lags, fs_clin):
-
-    half_window = round((100 / 1000) * fs_clin)  # time based on sampling rate
-
-    onsets = np.array(datum.onset).astype(int)
-    X = np.stack(datum.embeddings)
-
-    t = len(brain_signal)
-    rp_lags = []
-
-    for lag in lags:
-        lag_amount = int(lag / 1000 * fs_clin)
-        index_onsets = np.minimum(
-            t - half_window - 1,
-            np.maximum(half_window + 1, onsets + lag_amount))
-        starts = index_onsets - half_window
-        stops = index_onsets + half_window + 1
-
-        cols = [range(*i) for i in zip(starts, stops)]
-
-        Y = np.array([np.mean(brain_signal[col_range]) for col_range in cols])
-
-        PY_hat = cv_lm_003(X, Y, 10)
-        rp, _, _ = encColCorr(Y.reshape(-1, 1), PY_hat)
-
-        rp_lags.append(rp)
-
-    return rp_lags
-
-
-# def encode_lags_numba(datum, brain_signal, lags, fs_clin):
-
-#     half_window = round((100 / 1000) * fs_clin)
-
-#     onsets = np.array(datum.onset).astype(int)
-#     X = np.stack(datum.embeddings)
-
-#     t = len(brain_signal)
-#     rp_lags = []
-
-#     Y = np.zeros((len(onsets), len(lags)))
-
-#     for lag in range(len(lags)):
-#         lag_amount = int(lags[lag] / 1000 * fs_clin)
-#         index_onsets = np.minimum(
-#             t - half_window - 1,
-#             np.maximum(half_window + 1, onsets + lag_amount))
-#         starts = index_onsets - half_window
-#         stops = index_onsets + half_window + 1
-
-#         for i, (start, stop) in enumerate(zip(starts, stops)):
-#             Y[i, lag] = np.mean(brain_signal[start:stop])
-
-#         # PY_hat = cv_lm_003(X, Y, 10)
-#         # rp, _, _ = encColCorr(Y.reshape(-1, 1), PY_hat)
-
-#         # rp_lags.append(rp)
-#     sys.exit()
-#     return rp_lags
-
-
 def build_XY(datum, brain_signal, lags, fs_clin):
-    half_window = round((100 / 1000) * fs_clin)
-
-    onsets = np.array(datum.onset).astype(int)
     X = np.stack(datum.embeddings)
+
+    fs_clin = 512
+    half_window = round((100 / 1000) * fs_clin)
     t = len(brain_signal)
 
-    Y = inner_function(lags, t, fs_clin, half_window, onsets, brain_signal)
-    return X, Y
-
-
-def encode_lags_numba1(X, Y):
-    np.random.shuffle(Y)
-    PY_hat = cv_lm_003(X, Y, 10)
-    rp, _, _ = encColCorr(Y, PY_hat)
-    return rp
-
-
-# def encode_lags_numba0(X, Y):
-#     rp_lags = []
-#     for column in Y.T:
-#         np.random.shuffle(column)
-#         PY_hat = cv_lm_003(X, column, 10)
-#         rp, _, _ = encColCorr(column.reshape(-1, 1), PY_hat)
-#         rp_lags.append(rp)
-#     print(rp_lags)
-#     return rp_lags
-
-def inner_function(lags, t, fs_clin, half_window, onsets, brain_signal):
+    onsets = np.array(datum.onset).astype(int)
     Y = np.zeros((len(onsets), len(lags)))
+
     for lag in range(len(lags)):
         lag_amount = int(lags[lag] / 1000 * fs_clin)
 
@@ -197,4 +114,11 @@ def inner_function(lags, t, fs_clin, half_window, onsets, brain_signal):
         for i, (start, stop) in enumerate(zip(starts, stops)):
             Y[i, lag] = np.mean(brain_signal[start:stop])
 
-    return Y
+    return X, Y
+
+
+def encode_lags_numba(X, Y):
+    np.random.shuffle(Y)
+    PY_hat = cv_lm_003(X, Y, 10)
+    rp, _, _ = encColCorr(Y, PY_hat)
+    return rp
