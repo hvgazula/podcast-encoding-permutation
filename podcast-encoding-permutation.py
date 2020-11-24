@@ -40,23 +40,26 @@ print(args)
 
 hostname = os.environ['HOSTNAME']
 if 'tiger' in hostname:
+    tiger = 1
     PROJ_DIR = '/projects/HASSON/247/data/podcast'
     DATUM_DIR = PROJ_DIR
     CONV_DIR = PROJ_DIR
-    BRAIN_DIR_STR = 'preprocessed'
-    tiger = 1
+    if args.sid in [661, 662, 717, 723]:
+        BRAIN_DIR_STR = 'preprocessed'
+    else:
+        BRAIN_DIR_STR = 'preprocessed-ica'
 elif 'scotty' in hostname:
+    tiger = 0
     PROJ_DIR = '/mnt/bucket/labs/hasson/ariel/247/'
     DATUM_DIR = os.path.join(PROJ_DIR, 'models/podcast-datums')
     CONV_DIR = os.path.join(PROJ_DIR,
                             'conversation_space/crude-conversations/Podcast')
     BRAIN_DIR_STR = 'preprocessed_all'
-    tiger = 0
 else:
+    tiger = 0
     PROJ_DIR = None
     print("Could not find PROJ_DIR. Please specify it here.")
     sys.exit()
-    tiger = 0
 
 # Locate and read datum
 datum = read_datum(args, DATUM_DIR)
