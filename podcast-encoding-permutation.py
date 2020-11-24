@@ -51,7 +51,6 @@ parser.add_argument('--electrode', type=int, default=None)
 parser.add_argument('--npermutations', type=int, default=5000)
 args = parser.parse_args()
 
-raise Exception(args)
 if not args.sid:
     print('Enter a valid subject ID')
     sys.exit()

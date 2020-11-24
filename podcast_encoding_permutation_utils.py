@@ -91,18 +91,14 @@ def fit_model(Xtra, Ytra):
     return B
 
 
-def build_XY(datum, brain_signal, lags, fs_clin):
-    X = np.stack(datum.embeddings)
-
-    fs_clin = 512
-    half_window = round((100 / 1000) * fs_clin)
+def build_Y(onsets, brain_signal, lags, window_size):
+    half_window = round((window_size / 1000) * 512 / 2)
     t = len(brain_signal)
 
-    onsets = np.array(datum.onset).astype(int)
     Y = np.zeros((len(onsets), len(lags)))
 
     for lag in range(len(lags)):
-        lag_amount = int(lags[lag] / 1000 * fs_clin)
+        lag_amount = int(lags[lag] / 1000 * 512)
 
         index_onsets = np.minimum(
             t - half_window - 1,
@@ -113,6 +109,17 @@ def build_XY(datum, brain_signal, lags, fs_clin):
 
         for i, (start, stop) in enumerate(zip(starts, stops)):
             Y[i, lag] = np.mean(brain_signal[start:stop])
+
+    return Y
+
+
+def build_XY(datum, brain_signal, lags, window_size):
+    X = np.stack(datum.embeddings)
+
+    onsets = datum.onset.values.astype(int)
+    lags = np.array(lags)
+
+    Y = build_Y(onsets, brain_signal, lags, window_size)
 
     return X, Y
 
