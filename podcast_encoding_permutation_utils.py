@@ -4,6 +4,8 @@ import numpy as np
 from scipy import signal, stats
 from sklearn.model_selection import KFold
 
+# TODO: Complete docstrings
+
 
 def encColCorr(CA, CB):
     """[summary]
@@ -199,7 +201,7 @@ def run_save_permutation(args, prod_X, prod_Y, filename):
         prod_X ([type]): [description]
         prod_Y ([type]): [description]
         filename ([type]): [description]
-    """    
+    """
     if prod_X.shape[0]:
         perm_prod = np.stack([
             encode_lags_numba(prod_X, prod_Y)

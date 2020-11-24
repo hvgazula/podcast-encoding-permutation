@@ -1,5 +1,4 @@
 import argparse
-import csv
 import glob
 import os
 import statistics
@@ -11,8 +10,7 @@ import numpy as np
 import pandas as pd
 from scipy.io import loadmat
 
-from podcast_encoding_permutation_utils import (build_XY, encode_lags_numba,
-                                                run_save_permutation)
+from podcast_encoding_permutation_utils import build_XY, run_save_permutation
 
 start_time = datetime.now()
 print(f'Start Time: {start_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
@@ -42,9 +40,11 @@ args = parser.parse_args()
 hostname = os.environ['HOSTNAME']
 if 'tiger' in hostname:
     PROJ_DIR = '/projects/HASSON/247/data/podcast'
+    DATUM_DIR = PROJ_DIR
     tiger = 1
 elif 'scotty' in hostname:
     PROJ_DIR = '/mnt/bucket/labs/hasson/ariel/247/'
+    DATUM_DIR = os.path.join(PROJ_DIR, 'models/podcast-datums')
     tiger = 0
 else:
     PROJ_DIR = None
@@ -137,16 +137,8 @@ if not os.path.isfile(elecDir + name + '_perm.csv'):
                          str(f), '.mat'])))['p1st']
 
     # Locate and read datum
-    if tiger:
-        datumName = os.path.join(PROJ_DIR, args.datum_emb_fn)
-    else:
-        datumName = os.path.join(
-            '/mnt/bucket/labs/hasson/ariel/247/models/podcast-datums/',
-            args.datum_emb_fn)
+    df = pd.read_csv(os.path.join(DATUM_DIR, args.datum_emb_fn), header=0)
 
-    df = pd.read_csv(datumName, header=0)
-
-    # print(df.shape)
     if args.nonWords:
         df = df[df.is_nonword == 0]
     if args.gpt2:
@@ -200,14 +192,15 @@ if not os.path.isfile(elecDir + name + '_perm.csv'):
     X, Y = build_XY(datum, elec_signal, args.lags, 512)
 
     prod_X = X[datum.speaker == 'Speaker1', :]
-    comp_X = X[datum.speaker == 'Speaker2', :]
+    comp_X = X[datum.speaker != 'Speaker1', :]
 
     prod_Y = Y[datum.speaker == 'Speaker1', :]
-    comp_Y = Y[datum.speaker == 'Speaker2', :]
+    comp_Y = Y[datum.speaker != 'Speaker1', :]
 
     # run and save permutation
     filename = ''.join([elecDir, name, '_prod.csv'])
     run_save_permutation(args, prod_X, prod_Y, filename)
+
     filename = ''.join([elecDir, name, '_comp.csv'])
     run_save_permutation(args, comp_X, comp_Y)
 
