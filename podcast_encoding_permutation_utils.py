@@ -4,7 +4,15 @@ from sklearn.model_selection import KFold
 
 
 def encColCorr(CA, CB):
+    """[summary]
 
+    Args:
+        CA ([type]): [description]
+        CB ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
     assert CA.shape == CB.shape
     df = np.shape(CA)[0] - 2
 
@@ -30,6 +38,14 @@ def cv_lm_003(X, Y, kfolds):
     """Cross-validated predictions from a regression model using sequential
         block partitions with nuisance regressors included in the training
         folds
+
+    Args:
+        X ([type]): [description]
+        Y ([type]): [description]
+        kfolds ([type]): [description]
+
+    Returns:
+        [type]: [description]
     """
     skf = KFold(n_splits=kfolds, shuffle=False)
 
@@ -84,6 +100,15 @@ def cv_lm_003(X, Y, kfolds):
 
 
 def fit_model(Xtra, Ytra):
+    """[summary]
+
+    Args:
+        Xtra ([type]): [description]
+        Ytra ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
     lamb = 1
     XtX_lamb = Xtra.T.dot(Xtra) + lamb * np.eye(Xtra.shape[1])
     XtY = Xtra.T.dot(Ytra)
@@ -92,7 +117,20 @@ def fit_model(Xtra, Ytra):
 
 
 def build_Y(onsets, brain_signal, lags, window_size):
-    half_window = round((window_size / 1000) * 512 / 2)
+    """[summary]
+
+    Args:
+        onsets ([type]): [description]
+        brain_signal ([type]): [description]
+        lags ([type]): [description]
+        window_size ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
+    FPS = 512
+
+    half_window = round((window_size / 1000) * FPS / 2)
     t = len(brain_signal)
 
     Y = np.zeros((len(onsets), len(lags)))
@@ -114,6 +152,17 @@ def build_Y(onsets, brain_signal, lags, window_size):
 
 
 def build_XY(datum, brain_signal, lags, window_size):
+    """[summary]
+
+    Args:
+        datum ([type]): [description]
+        brain_signal ([type]): [description]
+        lags ([type]): [description]
+        window_size ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
     X = np.stack(datum.embeddings)
 
     onsets = datum.onset.values.astype(int)
@@ -125,6 +174,15 @@ def build_XY(datum, brain_signal, lags, window_size):
 
 
 def encode_lags_numba(X, Y):
+    """[summary]
+
+    Args:
+        X ([type]): [description]
+        Y ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
     np.random.shuffle(Y)
     PY_hat = cv_lm_003(X, Y, 10)
     rp, _, _ = encColCorr(Y, PY_hat)

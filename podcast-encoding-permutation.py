@@ -16,17 +16,7 @@ from podcast_encoding_permutation_utils import build_XY, encode_lags_numba
 start_time = datetime.now()
 print(f'Start Time: {start_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
 
-hostname = os.environ['HOSTNAME']
-
-if 'tiger' in hostname:
-    PROJ_DIR = '/projects/HASSON/247/data/podcast'
-    tiger = 1
-elif 'scotty' in hostname:
-    PROJ_DIR = '/mnt/bucket/labs/hasson/ariel/247/'
-    tiger = 0
-
 parser = argparse.ArgumentParser()
-parser.add_argument('--fs-clin', type=int, default=512)
 parser.add_argument('--word-value', type=str, default='all')
 parser.add_argument('--stim', type=str, default='Podcast')
 parser.add_argument('--embeddings', type=str, default='gpt2xl-50d')
@@ -47,6 +37,19 @@ parser.add_argument('--glove', type=int, default=1)
 parser.add_argument('--electrode', type=int, default=None)
 parser.add_argument('--npermutations', type=int, default=5000)
 args = parser.parse_args()
+
+hostname = os.environ['HOSTNAME']
+if 'tiger' in hostname:
+    PROJ_DIR = '/projects/HASSON/247/data/podcast'
+    tiger = 1
+elif 'scotty' in hostname:
+    PROJ_DIR = '/mnt/bucket/labs/hasson/ariel/247/'
+    tiger = 0
+else:
+    PROJ_DIR = None
+    print("Could not find PROJ_DIR. Please specify it here.")
+    sys.exit()
+    tiger = 0
 
 if not args.sid:
     print('Enter a valid subject ID')
