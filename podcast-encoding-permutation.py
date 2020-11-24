@@ -20,12 +20,9 @@ hostname = os.environ['HOSTNAME']
 
 if 'tiger' in hostname:
     PROJ_DIR = '/projects/HASSON/247/data/podcast'
-    LOG_DIR = os.getcwd()
     tiger = 1
 elif 'scotty' in hostname:
     PROJ_DIR = '/mnt/bucket/labs/hasson/ariel/247/'
-    # LOG_DIR = os.path.join(PROJ_DIR, 'models/encoding/bobbi/perm_tests/')
-    LOG_DIR = os.environ['HOME']
     tiger = 0
 
 parser = argparse.ArgumentParser()
@@ -117,7 +114,7 @@ elecDir = ''.join([
     sid, '_', args.embeddings, '_160_200ms_', args.word_value, args.pilot, '_',
     args.outName, '/'
 ])
-elecDir = os.path.join(LOG_DIR, elecDir)
+elecDir = os.path.join(os.getcwd(), elecDir)
 
 if not os.path.exists(elecDir):
     os.makedirs(elecDir, exist_ok=True)
