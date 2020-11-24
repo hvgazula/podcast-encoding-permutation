@@ -1,5 +1,7 @@
 import csv
+import os
 
+import mat73
 import numpy as np
 from scipy import signal, stats
 from sklearn.model_selection import KFold
@@ -212,3 +214,20 @@ def run_save_permutation(args, prod_X, prod_Y, filename):
             csvwriter.writerows(perm_prod)
     else:
         print('Not encoding production due to lack of examples')
+
+
+def load_header(conversation_dir, subject_id):
+    """[summary]
+
+    Args:
+        conversation_dir ([type]): [description]
+        subject_id ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
+    misc_dir = os.path.join(conversation_dir, subject_id, 'misc')
+    header = mat73.loadmat(os.path.join(misc_dir, subject_id + '_header.mat'))
+    labels = header.header.label
+
+    return labels

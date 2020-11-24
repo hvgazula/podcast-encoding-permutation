@@ -1,17 +1,19 @@
 import argparse
 import glob
 import os
-import statistics
+from pathlib import Path
 import sys
 from datetime import datetime
 
 import mat73
-import numpy as np
 import pandas as pd
 from scipy.io import loadmat
 
-from podcast_encoding_permutation_utils import build_XY, run_save_permutation
+from podcast_encoding_permutation_utils import build_XY, run_save_permutation, load_header
+from podcast_encoding_read_datum import read_datum
 
+# TODO: Line 69 from matlab fiel ask about this
+# filesb = dir([brain_dir '/*_14.mat']);
 start_time = datetime.now()
 print(f'Start Time: {start_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
 
@@ -42,12 +44,14 @@ if 'tiger' in hostname:
     PROJ_DIR = '/projects/HASSON/247/data/podcast'
     DATUM_DIR = PROJ_DIR
     CONV_DIR = PROJ_DIR
+    BRAIN_DIR_STR = 'preprocessed'
     tiger = 1
 elif 'scotty' in hostname:
     PROJ_DIR = '/mnt/bucket/labs/hasson/ariel/247/'
     DATUM_DIR = os.path.join(PROJ_DIR, 'models/podcast-datums')
-    CONV_DIR = os.path.join(
-            PROJ_DIR, 'conversation_space/crude-conversations/Podcast')
+    CONV_DIR = os.path.join(PROJ_DIR,
+                            'conversation_space/crude-conversations/Podcast')
+    BRAIN_DIR_STR = 'preprocessed_all'
     tiger = 0
 else:
     PROJ_DIR = None
@@ -55,157 +59,100 @@ else:
     sys.exit()
     tiger = 0
 
-if not args.sid:
+if args.sid and not args.electrodes:
+    print("Please enter atleast one electrode number")
+    sys.exit()
+elif not args.sid and args.electrodes:
     print('Enter a valid subject ID')
     sys.exit()
 else:
     sid = 'NY' + str(args.sid) + '_111_Part1_conversation1'
+    conv_dir = os.path.join(PROJ_DIR, str(args.sid))
+    brain_dir = os.path.join(CONV_DIR, sid, BRAIN_DIR_STR)
+    filesb = glob.glob(os.path.join(brain_dir, '*.mat'))
+    filesb = sorted(filesb,
+                    key=lambda x: int(os.path.splitext(x)[0].split('_')[-1]))
+    electrode_list = args.electrodes
+    # Path('/root/dir/sub/file.ext').stem
+
+    labels = load_header(CONV_DIR, sid)
+
+    elecDir = ''.join([
+        sid, '_', args.embeddings, '_160_200ms_', args.word_value, args.pilot, '_',
+        args.outName, '/'
+    ])
+    elecDir = os.path.join(os.getcwd(), elecDir)
+    os.makedirs(elecDir, exist_ok=True)
+
+    # Locate and read datum
+    datum = read_datum(args, DATUM_DIR)
+
+    for electrode in electrode_list:
+        elec_signal = loadmat(filesb[electrode])['p1st']
+        name = filesb[electrode][31:]
+
+        # Build design matrices
+        X, Y = build_XY(datum, elec_signal, args.lags, 512)
+
+        # Split into production and comprehension
+        prod_X = X[datum.speaker == 'Speaker1', :]
+        comp_X = X[datum.speaker != 'Speaker1', :]
+
+        prod_Y = Y[datum.speaker == 'Speaker1', :]
+        comp_Y = Y[datum.speaker != 'Speaker1', :]
+
+        # Run permutation and save results
+        filename = ''.join([elecDir, name, '_prod.csv'])
+        run_save_permutation(args, prod_X, prod_Y, filename)
+
+        filename = ''.join([elecDir, name, '_comp.csv'])
+        run_save_permutation(args, comp_X, comp_Y, filename)
+
 
 if args.sig_elec_name:
     sig_elec_file = os.path.join(PROJ_DIR, 'prediction_presentation',
                                  args.sig_elec_name)
-    sig_elec = pd.read_csv(sig_elec_file, header=None)[0].tolist()
-else:
-    sig_elec = 0
+    sig_elec_list = pd.read_csv(sig_elec_file, header=None)[0].tolist()
 
-if tiger:
-    conv_dir = os.path.join(PROJ_DIR, str(args.sid))
-else:
-    conv_dir = os.path.join(PROJ_DIR,
-                            'conversation_space/crude-conversations/Podcast',
-                            str(args.sid), '/')
+    for sig_elec in sig_elec_list:
+        sid = sig_elec[:29]
+        brain_dir = os.path.join(CONV_DIR, sid, BRAIN_DIR_STR)
 
-if args.electrodes is None:
-    print("Please enter a valid electrode number")
-    sys.exit()
-else:
-    i = args.electrodes
+        labels = load_header(CONV_DIR, sid)
+        electrode_num = int(
+            os.path.splitext(filesb[electrode])[0].split('_')[-1]) - 1
+        # subtracted 1 to align with matlab indexing
+        name = labels[electrode_num]
+        f = labels.index(name)
 
-if isinstance(sig_elec, int):
-    if tiger:
-        conv_dir = os.path.join(CONV_DIR, sid)
-        brain_dir = os.path.join(conv_dir, 'preprocessed')
-    else:
-        conv_dir = os.path.join(CONV_DIR, sid)
-        brain_dir = os.path.join(conv_dir, 'preprocessed_all')
-
-    filesb = glob.glob(os.path.join(brain_dir, '*.mat'))
-    # filesb = sorted(filesb,
-    #                 key=lambda x: int(os.path.splitext(x)[0].split('_')[-1]))
-    filesb = sorted(filesb)
-else:
-    sid = sig_elec[i][:29]
-    if tiger:
-        conv_dir = os.path.join(CONV_DIR, sid)
-        brain_dir = os.path.join(conv_dir, 'preprocessed')
-    else:
-        conv_dir = os.path.join(CONV_DIR, sid)
-        brain_dir = os.path.join(conv_dir, 'preprocessed_all')
-
-if i > len(filesb):
-    sys.exit()
-
-misc_dir = os.path.join(conv_dir, 'misc')
-header = mat73.loadmat(os.path.join(misc_dir, sid + '_header.mat'))
-labels = header.header.label
-
-if sig_elec:
-    name = filesb[i][31:]
-else:
-    electrode_num = int(os.path.splitext(filesb[i])[0].split('_')[-1]) - 1
-    # subtracted 1 to align with matlab indexing
-    name = labels[electrode_num]
-
-print(i, name)
-elecDir = ''.join([
-    sid, '_', args.embeddings, '_160_200ms_', args.word_value, args.pilot, '_',
-    args.outName, '/'
-])
-elecDir = os.path.join(os.getcwd(), elecDir)
-os.makedirs(elecDir, exist_ok=True)
-
-# Locate and read datum
-df = pd.read_csv(os.path.join(DATUM_DIR, args.datum_emb_fn), header=0)
-
-if args.nonWords:
-    df = df[df.is_nonword == 0]
-if args.gpt2:
-    df = df[df.in_gpt2 == 1]
-if args.bert:
-    df = df[df.in_bert == 1]
-if args.bart:
-    df = df[df.in_bart == 1]
-if args.glove:
-    df = df[df.in_glove == 1]
-
-# df = df[df.in_roberta == 1]
-
-df_cols = df.columns.tolist()
-embedding_columns = df_cols[df_cols.index('0'):]
-df = df[~df['word'].isin(['sp', '{lg}', '{ns}', '{inaudible}'])]
-df = df.dropna()
-
-df['embeddings'] = df[embedding_columns].values.tolist()
-df = df.drop(columns=embedding_columns)
-
-if args.word_value == 'bottom':
-    df = df.dropna(subset=['gpt2_xl_target_prob', 'human_target_prob'])
-    denom = 3
-    if args.pilot == 'GPT2':
-        pred = df.gpt2_xl_target_prob
-    elif args.pilot == 'mturk':
-        pred = df.human_target_prob
-    m = sorted(pred)
-    med = statistics.median(m)
-    datum = df[
-        pred <= m[np.ceil(len(m) / denom)],
-        ['word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings']]
-elif args.word_value == 'all':
-    datum = df[[
-        'word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings'
-    ]]
-else:
-    df = df.dropna(subset=['gpt2_xl_target_prob', 'human_target_prob'])
-    denom = 3
-    if args.pilot == 'GPT2':
-        pred = df.gpt2_xl_target_prob
-    elif args.pilot == 'mturk':
-        pred = df.human_target_prob
-    m = sorted(pred)
-    med = statistics.median(m)
-    datum = df[
-        pred >= m[len(m) - np.ceil(len(m) / denom)],
-        ['word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings']]
-
-# TODO: I guess this condition is not really needed (check with Bobbi)
-# Wrap this if condition inside a for loop for all electrodes within one script
-if not os.path.isfile(elecDir + name + '_perm.csv'):
-    f = labels.index(name)
-
-    # Load electrode signal
-    if isinstance(sig_elec, int):
-        elec_signal = loadmat(filesb[i])['p1st']
-    else:
         elec_signal = loadmat(
-            os.path.join(
-                brain_dir,
-                ''.join([sid, '_electrode_preprocess_file_',
-                         str(f), '.mat'])))['p1st']
+                os.path.join(
+                    brain_dir,
+                    ''.join([sid, '_electrode_preprocess_file_',
+                            str(f), '.mat'])))['p1st']
+        elecDir = ''.join([
+            sid, '_', args.embeddings, '_160_200ms_', args.word_value, args.pilot, '_',
+            args.outName, '/'
+        ])
+        elecDir = os.path.join(os.getcwd(), elecDir)
+        os.makedirs(elecDir, exist_ok=True)
 
-    X, Y = build_XY(datum, elec_signal, args.lags, 512)
+        # Build design matrices
+        X, Y = build_XY(datum, elec_signal, args.lags, 512)
 
-    prod_X = X[datum.speaker == 'Speaker1', :]
-    comp_X = X[datum.speaker != 'Speaker1', :]
+        # Split into production and comprehension
+        prod_X = X[datum.speaker == 'Speaker1', :]
+        comp_X = X[datum.speaker != 'Speaker1', :]
 
-    prod_Y = Y[datum.speaker == 'Speaker1', :]
-    comp_Y = Y[datum.speaker != 'Speaker1', :]
+        prod_Y = Y[datum.speaker == 'Speaker1', :]
+        comp_Y = Y[datum.speaker != 'Speaker1', :]
 
-    # run and save permutation
-    filename = ''.join([elecDir, name, '_prod.csv'])
-    run_save_permutation(args, prod_X, prod_Y, filename)
+        # Run permutation and save results
+        filename = ''.join([elecDir, name, '_prod.csv'])
+        run_save_permutation(args, prod_X, prod_Y, filename)
 
-    filename = ''.join([elecDir, name, '_comp.csv'])
-    run_save_permutation(args, comp_X, comp_Y, filename)
+        filename = ''.join([elecDir, name, '_comp.csv'])
+        run_save_permutation(args, comp_X, comp_Y, filename)
 
 end_time = datetime.now()
 
