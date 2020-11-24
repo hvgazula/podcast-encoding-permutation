@@ -7,8 +7,6 @@ from numba import jit, prange
 from scipy import signal, stats
 from sklearn.model_selection import KFold
 
-# TODO: Complete docstrings
-
 
 def encColCorr(CA, CB):
     """[summary]

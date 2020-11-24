@@ -10,10 +10,6 @@ from scipy.io import loadmat
 from podcast_encoding_permutation_utils import encoding_regression, load_header
 from podcast_encoding_read_datum import read_datum
 
-# TODO: Line 69 from matlab fiel ask about this
-# filesb = dir([brain_dir '/*_14.mat']);
-# what is the difference between data_emb_fn and embeddings
-# len(labels) not matching with number of mat files
 start_time = datetime.now()
 print(f'Start Time: {start_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
 
