@@ -11,7 +11,8 @@ import numpy as np
 import pandas as pd
 from scipy.io import loadmat
 
-from podcast_encoding_permutation_utils import build_XY, encode_lags_numba
+from podcast_encoding_permutation_utils import (build_XY, encode_lags_numba,
+                                                run_save_permutation)
 
 start_time = datetime.now()
 print(f'Start Time: {start_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
@@ -204,27 +205,11 @@ if not os.path.isfile(elecDir + name + '_perm.csv'):
     prod_Y = Y[datum.speaker == 'Speaker1', :]
     comp_Y = Y[datum.speaker == 'Speaker2', :]
 
-    # run permutation
-    if prod_X.shape[0]:
-        permx = np.stack([
-            encode_lags_numba(prod_X, prod_Y)
-            for _ in range(args.npermutations)
-        ])
-    else:
-        print('Not encoding production due to lack of examples')
-
-    if comp_X.shape[0]:
-        permx = np.stack([
-            encode_lags_numba(comp_X, comp_Y)
-            for _ in range(args.npermutations)
-        ])
-    else:
-        print('Not encoding comprehension due to lack of examples')
-
-    filename = ''.join([elecDir, name, '_perm.csv'])
-    with open(filename, 'w') as csvfile:
-        csvwriter = csv.writer(csvfile)
-        csvwriter.writerows(permx)
+    # run and save permutation
+    filename = ''.join([elecDir, name, '_prod.csv'])
+    run_save_permutation(args, prod_X, prod_Y, filename)
+    filename = ''.join([elecDir, name, '_comp.csv'])
+    run_save_permutation(args, comp_X, comp_Y)
 
 end_time = datetime.now()
 

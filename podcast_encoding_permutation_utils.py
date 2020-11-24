@@ -1,3 +1,5 @@
+import csv
+
 import numpy as np
 from scipy import signal, stats
 from sklearn.model_selection import KFold
@@ -187,3 +189,25 @@ def encode_lags_numba(X, Y):
     PY_hat = cv_lm_003(X, Y, 10)
     rp, _, _ = encColCorr(Y, PY_hat)
     return rp
+
+
+def run_save_permutation(args, prod_X, prod_Y, filename):
+    """[summary]
+
+    Args:
+        args ([type]): [description]
+        prod_X ([type]): [description]
+        prod_Y ([type]): [description]
+        filename ([type]): [description]
+    """    
+    if prod_X.shape[0]:
+        perm_prod = np.stack([
+            encode_lags_numba(prod_X, prod_Y)
+            for _ in range(args.npermutations)
+        ])
+    else:
+        print('Not encoding production due to lack of examples')
+
+    with open(filename, 'w') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerows(perm_prod)
