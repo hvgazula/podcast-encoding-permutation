@@ -1,6 +1,6 @@
 CMD := echo
 CMD := sbatch submit.sh
-# CMD := python
+CMD := python
 FILE := encoding-permutation
 
 # username
@@ -56,8 +56,11 @@ SID := 661
 SE := 5000-sig-elec-50d-onethresh-01.csv
 NW := nonWords
 WV := all
-NP := 5000
+NP := 50
 LAGS := {-2000..2000..25}
+SH := --shuffle
+DT := $(shell date +"%Y%m%d")
+WS := 200
 # --sig-elec-name $(SE) \
 
 # submit on the cluster (one job for each electrode)
@@ -66,6 +69,7 @@ run-perm-cluster:
 	for elec in $(E_LIST); do \
 		$(CMD) podcast-$(FILE).py \
 			--sid $(SID) \
+			--window-size $(WS) \
 			--datum-emb-fn $(DS) \
 			--word-value $(WV) \
 			--$(NW) \
@@ -73,12 +77,27 @@ run-perm-cluster:
 			--electrodes $$elec \
 			--npermutations $(NP) \
 			--lags $(LAGS) \
-			--outName $(SID)-$(USR)-test1; \
+			$(SH) \
+			--outName $(DT)-$(USR)-$(WS)ms; \
 	done
 
+CMD := python
+run-perm-cluster1:
+	$(CMD) podcast-$(FILE).py \
+		--sid $(SID) \
+		--datum-emb-fn $(DS) \
+		--word-value $(WV) \
+		--$(NW) \
+		--glove 1 \
+		--electrodes $(E_LIST) \
+		--npermutations $(NP) \
+		--lags $(LAGS) \
+		$(SH) \
+		--outName $(DT)-$(USR)-$(WS)ms; \
+
 # submit on the command line
-run-perm-cmd:
-	CMD := python
+CMD := python
+run-perm-cmd0:
 	for elec in $(E_LIST); do \
 		$(CMD) podcast-$(FILE).py \
 			--sid 661 \
@@ -87,6 +106,9 @@ run-perm-cmd:
 			--$(NW) \
 			--glove 1 \
 			--electrode $$elec \
+			--lags $(LAGS) \
+			--npermutations $(NP) \
+			$(SH) \
 			--outName $(SID)-$(USR)-test1 & \
 	done
 
@@ -102,5 +124,8 @@ run-perm-cmd:
 			--$(NW) \
 			--glove 1 \
 			--electrode $$elec \
+			--lags $(LAGS) \
+			--npermutations $(NP) \
+			$(SH) \
 			--outName $(SID)-$(USR)-test1 & \
 	done

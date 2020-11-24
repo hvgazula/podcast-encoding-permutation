@@ -3,6 +3,7 @@ import os
 
 import mat73
 import numpy as np
+from numba import jit, prange
 from scipy import signal, stats
 from sklearn.model_selection import KFold
 
@@ -105,6 +106,7 @@ def cv_lm_003(X, Y, kfolds):
     return YHAT
 
 
+@jit(nopython=True)
 def fit_model(Xtra, Ytra):
     """[summary]
 
@@ -122,6 +124,7 @@ def fit_model(Xtra, Ytra):
     return B
 
 
+@jit(nopython=True)
 def build_Y(onsets, brain_signal, lags, window_size):
     """[summary]
 
@@ -141,7 +144,7 @@ def build_Y(onsets, brain_signal, lags, window_size):
 
     Y = np.zeros((len(onsets), len(lags)))
 
-    for lag in range(len(lags)):
+    for lag in prange(len(lags)):
         lag_amount = int(lags[lag] / 1000 * 512)
 
         index_onsets = np.minimum(
@@ -157,7 +160,7 @@ def build_Y(onsets, brain_signal, lags, window_size):
     return Y
 
 
-def build_XY(datum, brain_signal, lags, window_size):
+def build_XY(args, datum, brain_signal):
     """[summary]
 
     Args:
@@ -169,17 +172,18 @@ def build_XY(datum, brain_signal, lags, window_size):
     Returns:
         [type]: [description]
     """
+
     X = np.stack(datum.embeddings)
 
     onsets = datum.onset.values.astype(int)
-    lags = np.array(lags)
+    lags = np.array(args.lags)
 
-    Y = build_Y(onsets, brain_signal, lags, window_size)
+    Y = build_Y(onsets, brain_signal, lags, args.window_size)
 
     return X, Y
 
 
-def encode_lags_numba(X, Y):
+def encode_lags_numba(args, X, Y):
     """[summary]
 
     Args:
@@ -189,7 +193,8 @@ def encode_lags_numba(X, Y):
     Returns:
         [type]: [description]
     """
-    np.random.shuffle(Y)
+    if args.shuffle:
+        np.random.shuffle(Y)
     PY_hat = cv_lm_003(X, Y, 10)
     rp, _, _ = encColCorr(Y, PY_hat)
     return rp
@@ -206,7 +211,7 @@ def run_save_permutation(args, prod_X, prod_Y, filename):
     """
     if prod_X.shape[0]:
         perm_prod = np.stack([
-            encode_lags_numba(prod_X, prod_Y)
+            encode_lags_numba(args, prod_X, prod_Y)
             for _ in range(args.npermutations)
         ])
         with open(filename, 'w') as csvfile:
@@ -231,3 +236,31 @@ def load_header(conversation_dir, subject_id):
     labels = header.header.label
 
     return labels
+
+
+def encoding_regression(args, sid, datum, elec_signal, name):
+    elecDir = ''.join([
+        args.outName, '-', sid, '_', args.embeddings, '_160_200ms_',
+        args.word_value, args.pilot, '_', args.outName, '/'
+    ])
+    elecDir = os.path.join(os.getcwd(), elecDir)
+    os.makedirs(elecDir, exist_ok=True)
+
+    # Build design matrices
+    X, Y = build_XY(args, datum, elec_signal)
+
+    # Split into production and comprehension
+    prod_X = X[datum.speaker == 'Speaker1', :]
+    comp_X = X[datum.speaker != 'Speaker1', :]
+
+    prod_Y = Y[datum.speaker == 'Speaker1', :]
+    comp_Y = Y[datum.speaker != 'Speaker1', :]
+
+    # Run permutation and save results
+    filename = ''.join([elecDir, name, '_prod.csv'])
+    run_save_permutation(args, prod_X, prod_Y, filename)
+
+    filename = ''.join([elecDir, name, '_comp.csv'])
+    run_save_permutation(args, comp_X, comp_Y, filename)
+
+    return

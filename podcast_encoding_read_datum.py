@@ -1,8 +1,9 @@
 import os
-# import statistics
 
 import numpy as np
 import pandas as pd
+
+# import statistics
 
 
 def read_datum(args, DATUM_DIR):
