@@ -70,7 +70,7 @@ run-perm-cluster:
 			--word-value $(WV) \
 			--$(NW) \
 			--glove 1 \
-			--electrode $$elec \
+			--electrodes $$elec \
 			--npermutations $(NP) \
 			--lags $(LAGS) \
 			--outName $(SID)-$(USR)-test1; \

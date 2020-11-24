@@ -207,9 +207,8 @@ def run_save_permutation(args, prod_X, prod_Y, filename):
             encode_lags_numba(prod_X, prod_Y)
             for _ in range(args.npermutations)
         ])
+        with open(filename, 'w') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            csvwriter.writerows(perm_prod)
     else:
         print('Not encoding production due to lack of examples')
-
-    with open(filename, 'w') as csvfile:
-        csvwriter = csv.writer(csvfile)
-        csvwriter.writerows(perm_prod)

@@ -33,7 +33,7 @@ parser.add_argument('--gpt2', type=int, default=None)
 parser.add_argument('--bert', type=int, default=None)
 parser.add_argument('--bart', type=int, default=None)
 parser.add_argument('--glove', type=int, default=1)
-parser.add_argument('--electrode', type=int, default=None)
+parser.add_argument('--electrodes', type=int, default=None)
 parser.add_argument('--npermutations', type=int, default=5000)
 args = parser.parse_args()
 
@@ -41,10 +41,13 @@ hostname = os.environ['HOSTNAME']
 if 'tiger' in hostname:
     PROJ_DIR = '/projects/HASSON/247/data/podcast'
     DATUM_DIR = PROJ_DIR
+    CONV_DIR = PROJ_DIR
     tiger = 1
 elif 'scotty' in hostname:
     PROJ_DIR = '/mnt/bucket/labs/hasson/ariel/247/'
     DATUM_DIR = os.path.join(PROJ_DIR, 'models/podcast-datums')
+    CONV_DIR = os.path.join(
+            PROJ_DIR, 'conversation_space/crude-conversations/Podcast')
     tiger = 0
 else:
     PROJ_DIR = None
@@ -72,19 +75,20 @@ else:
                             'conversation_space/crude-conversations/Podcast',
                             str(args.sid), '/')
 
-if args.electrode is None:
-    i = 1
+if args.electrodes is None:
+    print("Please enter a valid electrode number")
+    sys.exit()
 else:
-    i = args.electrode
+    i = args.electrodes
 
 if isinstance(sig_elec, int):
     if tiger:
-        conv_dir = os.path.join(PROJ_DIR, sid)
+        conv_dir = os.path.join(CONV_DIR, sid)
         brain_dir = os.path.join(conv_dir, 'preprocessed')
     else:
-        conv_dir = os.path.join(
-            PROJ_DIR, 'conversation_space/crude-conversations/Podcast', sid)
+        conv_dir = os.path.join(CONV_DIR, sid)
         brain_dir = os.path.join(conv_dir, 'preprocessed_all')
+
     filesb = glob.glob(os.path.join(brain_dir, '*.mat'))
     # filesb = sorted(filesb,
     #                 key=lambda x: int(os.path.splitext(x)[0].split('_')[-1]))
@@ -92,11 +96,10 @@ if isinstance(sig_elec, int):
 else:
     sid = sig_elec[i][:29]
     if tiger:
-        conv_dir = os.path.join(PROJ_DIR, sid)
+        conv_dir = os.path.join(CONV_DIR, sid)
         brain_dir = os.path.join(conv_dir, 'preprocessed')
     else:
-        conv_dir = os.path.join(
-            PROJ_DIR, 'conversation_space/crude-conversations/Podcast', sid)
+        conv_dir = os.path.join(CONV_DIR, sid)
         brain_dir = os.path.join(conv_dir, 'preprocessed_all')
 
 if i > len(filesb):
@@ -119,10 +122,63 @@ elecDir = ''.join([
     args.outName, '/'
 ])
 elecDir = os.path.join(os.getcwd(), elecDir)
+os.makedirs(elecDir, exist_ok=True)
 
-if not os.path.exists(elecDir):
-    os.makedirs(elecDir, exist_ok=True)
+# Locate and read datum
+df = pd.read_csv(os.path.join(DATUM_DIR, args.datum_emb_fn), header=0)
 
+if args.nonWords:
+    df = df[df.is_nonword == 0]
+if args.gpt2:
+    df = df[df.in_gpt2 == 1]
+if args.bert:
+    df = df[df.in_bert == 1]
+if args.bart:
+    df = df[df.in_bart == 1]
+if args.glove:
+    df = df[df.in_glove == 1]
+
+# df = df[df.in_roberta == 1]
+
+df_cols = df.columns.tolist()
+embedding_columns = df_cols[df_cols.index('0'):]
+df = df[~df['word'].isin(['sp', '{lg}', '{ns}', '{inaudible}'])]
+df = df.dropna()
+
+df['embeddings'] = df[embedding_columns].values.tolist()
+df = df.drop(columns=embedding_columns)
+
+if args.word_value == 'bottom':
+    df = df.dropna(subset=['gpt2_xl_target_prob', 'human_target_prob'])
+    denom = 3
+    if args.pilot == 'GPT2':
+        pred = df.gpt2_xl_target_prob
+    elif args.pilot == 'mturk':
+        pred = df.human_target_prob
+    m = sorted(pred)
+    med = statistics.median(m)
+    datum = df[
+        pred <= m[np.ceil(len(m) / denom)],
+        ['word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings']]
+elif args.word_value == 'all':
+    datum = df[[
+        'word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings'
+    ]]
+else:
+    df = df.dropna(subset=['gpt2_xl_target_prob', 'human_target_prob'])
+    denom = 3
+    if args.pilot == 'GPT2':
+        pred = df.gpt2_xl_target_prob
+    elif args.pilot == 'mturk':
+        pred = df.human_target_prob
+    m = sorted(pred)
+    med = statistics.median(m)
+    datum = df[
+        pred >= m[len(m) - np.ceil(len(m) / denom)],
+        ['word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings']]
+
+# TODO: I guess this condition is not really needed (check with Bobbi)
+# Wrap this if condition inside a for loop for all electrodes within one script
 if not os.path.isfile(elecDir + name + '_perm.csv'):
     f = labels.index(name)
 
@@ -135,59 +191,6 @@ if not os.path.isfile(elecDir + name + '_perm.csv'):
                 brain_dir,
                 ''.join([sid, '_electrode_preprocess_file_',
                          str(f), '.mat'])))['p1st']
-
-    # Locate and read datum
-    df = pd.read_csv(os.path.join(DATUM_DIR, args.datum_emb_fn), header=0)
-
-    if args.nonWords:
-        df = df[df.is_nonword == 0]
-    if args.gpt2:
-        df = df[df.in_gpt2 == 1]
-    if args.bert:
-        df = df[df.in_bert == 1]
-    if args.bart:
-        df = df[df.in_bart == 1]
-    if args.glove:
-        df = df[df.in_glove == 1]
-
-    # df = df[df.in_roberta == 1]
-
-    df_cols = df.columns.tolist()
-    embedding_columns = df_cols[df_cols.index('0'):]
-    df = df[~df['word'].isin(['sp', '{lg}', '{ns}', '{inaudible}'])]
-    df = df.dropna()
-
-    df['embeddings'] = df[embedding_columns].values.tolist()
-    df = df.drop(columns=embedding_columns)
-
-    if args.word_value == 'bottom':
-        df = df.dropna(subset=['gpt2_xl_target_prob', 'human_target_prob'])
-        denom = 3
-        if args.pilot == 'GPT2':
-            pred = df.gpt2_xl_target_prob
-        elif args.pilot == 'mturk':
-            pred = df.human_target_prob
-        m = sorted(pred)
-        med = statistics.median(m)
-        datum = df[
-            pred <= m[np.ceil(len(m) / denom)],
-            ['word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings']]
-    elif args.word_value == 'all':
-        datum = df[[
-            'word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings'
-        ]]
-    else:
-        df = df.dropna(subset=['gpt2_xl_target_prob', 'human_target_prob'])
-        denom = 3
-        if args.pilot == 'GPT2':
-            pred = df.gpt2_xl_target_prob
-        elif args.pilot == 'mturk':
-            pred = df.human_target_prob
-        m = sorted(pred)
-        med = statistics.median(m)
-        datum = df[
-            pred >= m[len(m) - np.ceil(len(m) / denom)],
-            ['word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings']]
 
     X, Y = build_XY(datum, elec_signal, args.lags, 512)
 
@@ -202,7 +205,7 @@ if not os.path.isfile(elecDir + name + '_perm.csv'):
     run_save_permutation(args, prod_X, prod_Y, filename)
 
     filename = ''.join([elecDir, name, '_comp.csv'])
-    run_save_permutation(args, comp_X, comp_Y)
+    run_save_permutation(args, comp_X, comp_Y, filename)
 
 end_time = datetime.now()
 
