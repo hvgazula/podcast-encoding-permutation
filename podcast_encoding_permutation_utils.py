@@ -230,7 +230,10 @@ def load_header(conversation_dir, subject_id):
         [type]: [description]
     """
     misc_dir = os.path.join(conversation_dir, subject_id, 'misc')
-    header = mat73.loadmat(os.path.join(misc_dir, subject_id + '_header.mat'))
+    header_file = os.path.join(misc_dir, subject_id + '_header.mat')
+    if not os.path.exists(header_file):
+        return
+    header = mat73.loadmat()
     labels = header.header.label
 
     return labels

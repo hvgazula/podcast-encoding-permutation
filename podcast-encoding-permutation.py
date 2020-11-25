@@ -4,6 +4,7 @@ import os
 import sys
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 from scipy.io import loadmat
 
@@ -21,21 +22,22 @@ parser.add_argument('--stim', type=str, default='Podcast')
 parser.add_argument('--embeddings', type=str, default='gpt2xl-50d')
 parser.add_argument('--pilot', type=str, default='')
 parser.add_argument('--lags', nargs='+', type=int)
-parser.add_argument('--outName', type=str, default='')
-parser.add_argument('--sig-elec-name', type=str, default=None)
+parser.add_argument('--outName', type=str, default='test')
+parser.add_argument('--sig-elec-name', type=str, default='5000-sig-elec-50d-onethresh-01.csv')
 parser.add_argument('--nonWords', action='store_false', default=True)
 parser.add_argument(
     '--datum-emb-fn',
     type=str,
-    default='podcast-datum-gpt2-xl-c_1024-previous-pca_50d.csv')
+    default='podcast-datum-glove-50d.csv')
 parser.add_argument('--sid', type=int, default=None)
-parser.add_argument('--gpt2', type=int, default=None)
+parser.add_argument('--gpt2', type=int, default=1)
 parser.add_argument('--bert', type=int, default=None)
 parser.add_argument('--bart', type=int, default=None)
 parser.add_argument('--glove', type=int, default=1)
 parser.add_argument('--electrodes', nargs='+', type=int)
 parser.add_argument('--npermutations', type=int, default=5000)
 args = parser.parse_args()
+
 print(args)
 
 hostname = os.environ['HOSTNAME']
@@ -67,7 +69,7 @@ if args.sid and not args.electrodes:
 elif not args.sid and args.electrodes:
     print('Enter a valid subject ID')
     sys.exit()
-else:
+elif args.sid and args.electrodes:
     sid = 'NY' + str(args.sid) + '_111_Part1_conversation1'
     conv_dir = os.path.join(PROJ_DIR, str(args.sid))
     brain_dir = os.path.join(CONV_DIR, sid, BRAIN_DIR_STR)
@@ -80,7 +82,7 @@ else:
     labels = load_header(CONV_DIR, sid)
 
     # number of labels in header == number of electrode mat files
-    # assert len(filesb) == len(labels)
+    assert len(filesb) <= len(labels)
 
     elecDir = ''.join([
         args.outName, '-', sid, '_', args.embeddings, '_160_200ms_',
@@ -102,9 +104,11 @@ if args.sig_elec_name:
 
     for sig_elec in sig_elec_list:
         sid = sig_elec[:29]
-        name = sig_elec[31:]
+        name = sig_elec[30:]
 
         labels = load_header(CONV_DIR, sid)
+        if not labels:
+            print(f'Header Missing')
         electrode_num = labels.index(name)
 
         brain_dir = os.path.join(CONV_DIR, sid, BRAIN_DIR_STR)

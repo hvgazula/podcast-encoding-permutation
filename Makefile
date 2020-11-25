@@ -50,18 +50,20 @@ PD = $(shell echo ${PRED_COL} | head -c 4)
 
 # datum
 DS := podcast-datum-glove-50d.csv
-DS := podcast-datum-gpt2-xl-c_1024-previous-pca_50d.csv
+# DS := podcast-datum-gpt2-xl-c_1024-previous-pca_50d.csv
 
-SID := 661
+# SID := 661
 SE := 5000-sig-elec-50d-onethresh-01.csv
 NW := nonWords
 WV := all
-NP := 50
+NP := 1
 LAGS := {-2000..2000..25}
-SH := --shuffle
+# SH := --shuffle
 DT := $(shell date +"%Y%m%d")
 WS := 200
-# --sig-elec-name $(SE) \
+GPT2 := 1
+GLOVE := 1
+
 
 # submit on the cluster (one job for each electrode)
 CMD := python
@@ -73,7 +75,8 @@ run-perm-cluster:
 			--datum-emb-fn $(DS) \
 			--word-value $(WV) \
 			--$(NW) \
-			--glove 1 \
+			--glove $(GLOVE) \
+			--gpt2 $(GPT2) \
 			--electrodes $$elec \
 			--npermutations $(NP) \
 			--lags $(LAGS) \
@@ -84,16 +87,17 @@ run-perm-cluster:
 CMD := python
 run-perm-cluster1:
 	$(CMD) podcast-$(FILE).py \
-		--sid $(SID) \
 		--datum-emb-fn $(DS) \
+		--window-size $(WS) \
 		--word-value $(WV) \
 		--$(NW) \
-		--glove 1 \
-		--electrodes $(E_LIST) \
+		--glove $(GLOVE) \
+		--gpt2 $(GPT2) \
 		--npermutations $(NP) \
 		--lags $(LAGS) \
+		--sig-elec-name $(SE) \
 		$(SH) \
-		--outName $(DT)-$(USR)-$(WS)ms; \
+		--outName glove50d-pa-f1-hg-20201124; \
 
 # submit on the command line
 CMD := python
