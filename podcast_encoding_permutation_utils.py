@@ -175,6 +175,7 @@ def build_XY(args, datum, brain_signal):
 
     onsets = datum.onset.values.astype(int)
     lags = np.array(args.lags)
+    brain_signal = brain_signal.reshape(-1, 1)
 
     Y = build_Y(onsets, brain_signal, lags, args.window_size)
 
@@ -233,7 +234,7 @@ def load_header(conversation_dir, subject_id):
     header_file = os.path.join(misc_dir, subject_id + '_header.mat')
     if not os.path.exists(header_file):
         return
-    header = mat73.loadmat()
+    header = mat73.loadmat(header_file)
     labels = header.header.label
 
     return labels

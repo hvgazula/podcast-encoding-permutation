@@ -106,23 +106,27 @@ if args.sig_elec_name:
     sig_elec_list = pd.read_csv(sig_elec_file, header=None)[0].tolist()
 
     for sig_elec in sig_elec_list:
-        sid = sig_elec[:29]
-        name = sig_elec[30:]
-
+        sid, elec_name = sig_elec[:29], sig_elec[30:]
+        print(sid, elec_name)
+        
         labels = load_header(CONV_DIR, sid)
         if not labels:
             print(f'Header Missing')
-        electrode_num = labels.index(name)
+        electrode_num = labels.index(elec_name)
 
         brain_dir = os.path.join(CONV_DIR, sid, BRAIN_DIR_STR)
-        elec_signal = loadmat(
-            os.path.join(
-                brain_dir, ''.join([
-                    sid, '_electrode_preprocess_file_',
-                    str(electrode_num), '.mat'
-                ])))['p1st']
+        electrode_file = os.path.join(
+                    brain_dir, ''.join([
+                        sid, '_electrode_preprocess_file_',
+                        str(electrode_num), '.mat'
+                    ]))
+        try:
+            elec_signal = loadmat(electrode_file)['p1st']
+        except FileNotFoundError as e:
+            print(f'Missing: {electrode_file}')
+            continue
 
-        encoding_regression(args, sid, datum, elec_signal, name)
+        encoding_regression(args, sid, datum, elec_signal, elec_name)
 
 end_time = datetime.now()
 
