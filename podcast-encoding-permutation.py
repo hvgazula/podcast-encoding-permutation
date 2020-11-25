@@ -23,12 +23,13 @@ parser.add_argument('--embeddings', type=str, default='gpt2xl-50d')
 parser.add_argument('--pilot', type=str, default='')
 parser.add_argument('--lags', nargs='+', type=int)
 parser.add_argument('--outName', type=str, default='test')
-parser.add_argument('--sig-elec-name', type=str, default='5000-sig-elec-50d-onethresh-01.csv')
+parser.add_argument('--sig-elec-name',
+                    type=str,
+                    default='5000-sig-elec-50d-onethresh-01.csv')
 parser.add_argument('--nonWords', action='store_false', default=True)
-parser.add_argument(
-    '--datum-emb-fn',
-    type=str,
-    default='podcast-datum-glove-50d.csv')
+parser.add_argument('--datum-emb-fn',
+                    type=str,
+                    default='podcast-datum-glove-50d.csv')
 parser.add_argument('--sid', type=int, default=None)
 parser.add_argument('--gpt2', type=int, default=1)
 parser.add_argument('--bert', type=int, default=None)
@@ -108,7 +109,7 @@ if args.sig_elec_name:
     for sig_elec in sig_elec_list:
         sid, elec_name = sig_elec[:29], sig_elec[30:]
         print(sid, elec_name)
-        
+
         labels = load_header(CONV_DIR, sid)
         if not labels:
             print(f'Header Missing')
@@ -116,10 +117,10 @@ if args.sig_elec_name:
 
         brain_dir = os.path.join(CONV_DIR, sid, BRAIN_DIR_STR)
         electrode_file = os.path.join(
-                    brain_dir, ''.join([
-                        sid, '_electrode_preprocess_file_',
-                        str(electrode_num), '.mat'
-                    ]))
+            brain_dir, ''.join([
+                sid, '_electrode_preprocess_file_',
+                str(electrode_num), '.mat'
+            ]))
         try:
             elec_signal = loadmat(electrode_file)['p1st']
         except FileNotFoundError as e:
