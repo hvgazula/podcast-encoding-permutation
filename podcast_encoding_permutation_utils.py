@@ -1,5 +1,7 @@
 import csv
 import os
+import sys
+from pprint import pprint
 
 import mat73
 import numpy as np
@@ -115,7 +117,7 @@ def fit_model(Xtra, Ytra):
     Returns:
         [type]: [description]
     """
-    lamb = 1
+    lamb = 0
     XtX_lamb = Xtra.T.dot(Xtra) + lamb * np.eye(Xtra.shape[1])
     XtY = Xtra.T.dot(Ytra)
     B = np.linalg.solve(XtX_lamb, XtY)
@@ -135,9 +137,8 @@ def build_Y(onsets, brain_signal, lags, window_size):
     Returns:
         [type]: [description]
     """
-    FPS = 512
 
-    half_window = round((window_size / 1000) * FPS / 2)
+    half_window = round((window_size / 1000) * 512 / 2)
     t = len(brain_signal)
 
     Y = np.zeros((len(onsets), len(lags)))
@@ -147,10 +148,12 @@ def build_Y(onsets, brain_signal, lags, window_size):
 
         index_onsets = np.minimum(
             t - half_window - 1,
-            np.maximum(half_window + 1, onsets + lag_amount))
+            np.maximum(half_window + 1,
+                       np.round_(onsets, 0, onsets) + lag_amount))
 
-        starts = index_onsets - half_window
-        stops = index_onsets + half_window + 1
+        # subtracting 1 from starts to account for 0-indexing
+        starts = index_onsets - half_window - 1
+        stops = index_onsets + half_window
 
         for i, (start, stop) in enumerate(zip(starts, stops)):
             Y[i, lag] = np.mean(brain_signal[start:stop])
@@ -170,10 +173,10 @@ def build_XY(args, datum, brain_signal):
     Returns:
         [type]: [description]
     """
-
     X = np.stack(datum.embeddings)
 
-    onsets = datum.onset.values.astype(int)
+    onsets = datum.onset.values
+
     lags = np.array(args.lags)
     brain_signal = brain_signal.reshape(-1, 1)
 
@@ -196,6 +199,7 @@ def encode_lags_numba(args, X, Y):
         np.random.shuffle(Y)
     PY_hat = cv_lm_003(X, Y, 10)
     rp, _, _ = encColCorr(Y, PY_hat)
+
     return rp
 
 
@@ -213,8 +217,12 @@ def run_save_permutation(args, prod_X, prod_Y, filename):
             encode_lags_numba(args, prod_X, prod_Y)
             for _ in range(args.npermutations)
         ])
+
         with open(filename, 'w') as csvfile:
             csvwriter = csv.writer(csvfile)
+            # try:
+            #     csvwriter.writerow(perm_prod)
+            # except _cv.Error as e:
             csvwriter.writerows(perm_prod)
     else:
         print('Not encoding production due to lack of examples')

@@ -1,4 +1,5 @@
 import os
+import sys
 
 import numpy as np
 import pandas as pd
@@ -8,6 +9,7 @@ import pandas as pd
 
 def read_datum(args, DATUM_DIR):
     df = pd.read_csv(os.path.join(DATUM_DIR, args.datum_emb_fn), header=0)
+    print(os.path.join(DATUM_DIR, args.datum_emb_fn))
 
     if args.nonWords:
         df = df[df.is_nonword == 0]
@@ -25,7 +27,7 @@ def read_datum(args, DATUM_DIR):
     df_cols = df.columns.tolist()
     embedding_columns = df_cols[df_cols.index('0'):]
     df = df[~df['word'].isin(['sp', '{lg}', '{ns}', '{inaudible}'])]
-    df = df.dropna()
+    df = df.dropna(subset=embedding_columns)
 
     df['embeddings'] = df[embedding_columns].values.tolist()
     df = df.drop(columns=embedding_columns)
