@@ -1,2 +1,2 @@
-# podcast-encoding-permutation
-Contains Python Code for performing encoding permutation 
+# podcast-encoding
+Contains python code for performing encoding on podcast data
