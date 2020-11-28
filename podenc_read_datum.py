@@ -24,6 +24,10 @@ def read_datum(args, DATUM_DIR):
 
     # df = df[df.in_roberta == 1]
 
+    if args.min_word_freq:
+        print(args.min_word_freq)
+        df = df[df.uncased_freq >= args.min_word_freq]
+
     df_cols = df.columns.tolist()
     embedding_columns = df_cols[df_cols.index('0'):]
     df = df[~df['word'].isin(['sp', '{lg}', '{ns}', '{inaudible}'])]

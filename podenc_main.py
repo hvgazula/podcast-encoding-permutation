@@ -32,14 +32,16 @@ parser.add_argument('--bart', type=int, default=None)
 parser.add_argument('--glove', type=int, default=1)
 parser.add_argument('--electrodes', nargs='+', type=int)
 parser.add_argument('--npermutations', type=int, default=1)
+parser.add_argument('--min-word-freq', nargs='?', type=int, default=1)
 
 group = parser.add_mutually_exclusive_group()
 group.add_argument('--sid', type=int, default=None)
-parser.add_argument('--sig-elec-name',
+group.add_argument('--sig-elec-name', nargs='?',
                     type=str,
-                    default='5000-sig-elec-50d-onethresh-01.csv')
+                    default=None)
 
 args = parser.parse_args()
+print(args)
 
 hostname = os.environ['HOSTNAME']
 if 'tiger' in hostname:
@@ -68,11 +70,12 @@ else:
 datum = read_datum(args, DATUM_DIR)
 
 if args.sid and not args.electrodes:
-    print("Please enter atleast one electrode number")
-    sys.exit()
+    parser.error("--sid requires --electrodes")
+elif not args.sid and args.electrodes:
+    parser.error("--electrodes requires --sid")
 elif not args.sid and args.electrodes:
     print('Enter a valid subject ID')
-    sys.exit()
+
 elif args.sid and args.electrodes:
     sid = 'NY' + str(args.sid) + '_111_Part1_conversation1'
     conv_dir = os.path.join(PROJ_DIR, str(args.sid))

@@ -1,7 +1,7 @@
 CMD := echo
 CMD := sbatch submit.sh
 CMD := python
-FILE := encoding-permutation
+FILE := main
 
 # username
 USR := $(shell whoami | head -c 2)
@@ -52,8 +52,7 @@ PD = $(shell echo ${PRED_COL} | head -c 4)
 DS := podcast-datum-glove-50d.csv
 # DS := podcast-datum-gpt2-xl-c_1024-previous-pca_50d.csv
 
-# SID := 661
-SE := 5000-sig-elec-50d-onethresh-01.csv
+# SE := 5000-sig-elec-50d-onethresh-01.csv
 NW := nonWords
 WV := all
 NP := 1
@@ -63,13 +62,12 @@ DT := $(shell date +"%Y%m%d")
 WS := 200
 GPT2 := 1
 GLOVE := 1
-
+MWF := 2
 
 # submit on the cluster (one job for each electrode)
-CMD := python
 run-perm-cluster:
 	for elec in $(E_LIST); do \
-		$(CMD) podcast-$(FILE).py \
+		$(CMD) podenc_$(FILE).py \
 			--sid $(SID) \
 			--window-size $(WS) \
 			--datum-emb-fn $(DS) \
@@ -79,14 +77,16 @@ run-perm-cluster:
 			--gpt2 $(GPT2) \
 			--electrodes $$elec \
 			--npermutations $(NP) \
+			--min-word-freq $(MWF) \
 			--lags $(LAGS) \
 			$(SH) \
 			--outName $(DT)-$(USR)-$(WS)ms; \
 	done
 
-CMD := python
 run-perm-cluster1:
-	$(CMD) podcast-$(FILE).py \
+	$(CMD) podenc_$(FILE).py \
+		--sid $(SID) \
+		--electrodes $(E_LIST) \
 		--datum-emb-fn $(DS) \
 		--window-size $(WS) \
 		--word-value $(WV) \
@@ -96,11 +96,11 @@ run-perm-cluster1:
 		--npermutations $(NP) \
 		--lags $(LAGS) \
 		--sig-elec-name $(SE) \
+		--min-word-freq $(MWF) \
 		$(SH) \
-		--outName glove50d-pa-f1-hg-20201124; \
+		--outName $(DT)-$(USR)-$(WS)ms; \
 
 # submit on the command line
-CMD := python
 run-perm-cmd0:
 	for elec in $(E_LIST); do \
 		$(CMD) podcast-$(FILE).py \
