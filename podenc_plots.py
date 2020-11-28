@@ -1,12 +1,12 @@
-import csv
 import glob
 import os
-import sys
+
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 # TODO: this file is work in progress
+
 
 def extract_correlations(directory_list):
     all_corrs = []

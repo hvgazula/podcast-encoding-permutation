@@ -4,12 +4,11 @@ import os
 import sys
 from datetime import datetime
 
-import numpy as np
 import pandas as pd
 from scipy.io import loadmat
 
-from podcast_encoding_permutation_utils import encoding_regression, load_header
-from podcast_encoding_read_datum import read_datum
+from podenc_utils import encoding_regression, load_header
+from podenc_read_datum import read_datum
 
 start_time = datetime.now()
 print(f'Start Time: {start_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
@@ -112,7 +111,7 @@ if args.sig_elec_name:
 
         labels = load_header(CONV_DIR, sid)
         if not labels:
-            print(f'Header Missing')
+            print('Header Missing')
         electrode_num = labels.index(elec_name)
         print(sid, elec_name, electrode_num + 1)
 
@@ -124,7 +123,7 @@ if args.sig_elec_name:
             ]))
         try:
             elec_signal = loadmat(electrode_file)['p1st']
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             print(f'Missing: {electrode_file}')
             continue
 
