@@ -37,7 +37,11 @@ def parse_arguments():
     group.add_argument('--sig-elec-name', nargs='?', type=str, default=None)
 
     args = parser.parse_args()
-    print(args)
+
+    if args.sid and not args.electrodes:
+        parser.error("--sid requires --electrodes")
+    elif not args.sid and args.electrodes:
+        parser.error("--electrodes requires --sid")
 
     return args
 
@@ -79,13 +83,8 @@ def setup_environ(args):
 
 
 def process_subjects(args):
-    if args.sid and not args.electrodes:
-        parser.error("--sid requires --electrodes")
-    elif not args.sid and args.electrodes:
-        parser.error("--electrodes requires --sid")
-    elif args.sid and args.electrodes:
+    if args.sid and args.electrodes:
         sid = 'NY' + str(args.sid) + '_111_Part1_conversation1'
-        conv_dir = os.path.join(args.PROJ_DIR, str(args.sid))
         brain_dir = os.path.join(args.CONV_DIR, sid, args.BRAIN_DIR_STR)
 
         filesb = glob.glob(os.path.join(brain_dir, '*.mat'))

@@ -1,7 +1,5 @@
 import csv
 import os
-import sys
-from pprint import pprint
 
 import mat73
 import numpy as np
@@ -20,7 +18,7 @@ def encColCorr(CA, CB):
     Returns:
         [type]: [description]
     """
-    assert CA.shape == CB.shape
+    # assert CA.shape == CB.shape
     df = np.shape(CA)[0] - 2
 
     CA = signal.detrend(CA, axis=0, type='constant')
@@ -213,16 +211,14 @@ def run_save_permutation(args, prod_X, prod_Y, filename):
         filename ([type]): [description]
     """
     if prod_X.shape[0]:
-        perm_prod = np.stack([
-            encode_lags_numba(args, prod_X, prod_Y)
-            for _ in range(args.npermutations)
-        ])
+        perm_prod = []
+        for _ in range(args.npermutations):
+            perm_rc = encode_lags_numba(args, prod_X, prod_Y)
+            perm_prod.append(perm_rc)
 
+        perm_prod = np.stack(perm_prod)
         with open(filename, 'w') as csvfile:
             csvwriter = csv.writer(csvfile)
-            # try:
-            #     csvwriter.writerow(perm_prod)
-            # except _cv.Error as e:
             csvwriter.writerows(perm_prod)
 
 
