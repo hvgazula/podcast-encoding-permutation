@@ -224,8 +224,6 @@ def run_save_permutation(args, prod_X, prod_Y, filename):
             #     csvwriter.writerow(perm_prod)
             # except _cv.Error as e:
             csvwriter.writerows(perm_prod)
-    else:
-        print('Not encoding production due to lack of examples')
 
 
 def load_header(conversation_dir, subject_id):
@@ -250,10 +248,10 @@ def load_header(conversation_dir, subject_id):
 
 def encoding_regression(args, sid, datum, elec_signal, name):
     elecDir = ''.join([
-        args.outName, '-', sid, '_', args.embeddings, '_160_200ms_',
+        args.outName, '-', sid, '_160_200ms_',
         args.word_value, args.pilot, '/'
     ])
-    elecDir = os.path.join(os.getcwd(), elecDir)
+    elecDir = os.path.join(os.getcwd(), 'Results', elecDir)
     os.makedirs(elecDir, exist_ok=True)
 
     # Build design matrices
@@ -265,6 +263,8 @@ def encoding_regression(args, sid, datum, elec_signal, name):
 
     prod_Y = Y[datum.speaker == 'Speaker1', :]
     comp_Y = Y[datum.speaker != 'Speaker1', :]
+
+    print(f'{sid} {name} Prod: {prod_X.shape[0]} Comp: {comp_X.shape[0]}')
 
     # Run permutation and save results
     filename = ''.join([elecDir, name, '_prod.csv'])

@@ -17,16 +17,16 @@ SID := 661
 # 22 - sig-elec-50d-pred - {300..321}
 # 79 - sig-elec-50d-FDR-allLags-allElec-onethresh-updated - {700..778}
 # 44 - sig-elec-bert-glove-diff-FDR.csv (fdr5) - {4000..4043}
-E = $(words $(E_LIST))
+# E = $(words $(E_LIST))
 # FDR across lags; FDR across elctrodes at max correlation (fdr2)
-E_LIST := $(shell seq 100 183)
-E_LIST := $(shell seq 400 485) # electest2-intersect
-E_LIST := $(shell seq 500 577) # GLoVe 5000 (0.001 sig)
-E_LIST := $(shell seq 950 987) # GLoVe 5000: -1000 to -100ms (0.05 sig)
-E_LIST := $(shell seq 2500 2560) # bert bert50d-glove50d-diff-sig-elec-01-116-abs
-E_LIST := $(shell seq 2600 2673) # gpt2-glove-50d-previous-diff-sig-elec-01-116
-E_LIST := $(shell seq 800 915) # 116 - GLoVe 5000 (0.01 sig)
-E_LIST := $(shell seq 1)
+# E_LIST := $(shell seq 100 183)
+# E_LIST := $(shell seq 400 485) # electest2-intersect
+# E_LIST := $(shell seq 500 577) # GLoVe 5000 (0.001 sig)
+# E_LIST := $(shell seq 950 987) # GLoVe 5000: -1000 to -100ms (0.05 sig)
+# E_LIST := $(shell seq 2500 2560) # bert bert50d-glove50d-diff-sig-elec-01-116-abs
+# E_LIST := $(shell seq 2600 2673) # gpt2-glove-50d-previous-diff-sig-elec-01-116
+# E_LIST := $(shell seq 800 915) # 116 - GLoVe 5000 (0.01 sig)
+E_LIST := $(shell seq 1 5)
 
 # 116 - 717
 # E_LIST=10 27 36 37 38 4 47 112 113 114 116 117 119 120 121 122 126 71 74 75 \
@@ -55,14 +55,14 @@ DS := podcast-datum-glove-50d.csv
 # SE := 5000-sig-elec-50d-onethresh-01.csv
 NW := nonWords
 WV := all
-NP := 1
+NP := 5
 LAGS := {-2000..2000..25}
-# SH := --shuffle
+SH := --shuffle
 DT := $(shell date +"%Y%m%d")
 WS := 200
 GPT2 := 1
 GLOVE := 1
-MWF := 2
+MWF := 1  # minimum word frequency 
 
 # submit on the cluster (one job for each electrode)
 run-perm-cluster:

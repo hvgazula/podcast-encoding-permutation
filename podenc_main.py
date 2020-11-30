@@ -7,8 +7,8 @@ from datetime import datetime
 import pandas as pd
 from scipy.io import loadmat
 
-from podenc_utils import encoding_regression, load_header
 from podenc_read_datum import read_datum
+from podenc_utils import encoding_regression, load_header
 
 start_time = datetime.now()
 print(f'Start Time: {start_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
@@ -18,7 +18,6 @@ parser.add_argument('--word-value', type=str, default='all')
 parser.add_argument('--window-size', type=int, default=200)
 parser.add_argument('--shuffle', action='store_true', default=False)
 parser.add_argument('--stim', type=str, default='Podcast')
-parser.add_argument('--embeddings', type=str, default='gpt2xl-50d')
 parser.add_argument('--pilot', type=str, default='')
 parser.add_argument('--lags', nargs='+', type=int)
 parser.add_argument('--outName', type=str, default='test')
@@ -35,10 +34,8 @@ parser.add_argument('--npermutations', type=int, default=1)
 parser.add_argument('--min-word-freq', nargs='?', type=int, default=1)
 
 group = parser.add_mutually_exclusive_group()
-group.add_argument('--sid', type=int, default=None)
-group.add_argument('--sig-elec-name', nargs='?',
-                    type=str,
-                    default=None)
+group.add_argument('--sid', nargs='?', type=int, default=None)
+group.add_argument('--sig-elec-name', nargs='?', type=str, default=None)
 
 args = parser.parse_args()
 print(args)
@@ -92,10 +89,9 @@ elif args.sid and args.electrodes:
     assert len(filesb) <= len(labels)
 
     elecDir = ''.join([
-        args.outName, '-', sid, '_', args.embeddings, '_160_200ms_',
-        args.word_value, args.pilot, '/'
+        args.outName, '-', sid, '_160_200ms_', args.word_value, args.pilot, '/'
     ])
-    elecDir = os.path.join(os.getcwd(), elecDir)
+    elecDir = os.path.join(os.getcwd(), 'Results', elecDir)
     os.makedirs(elecDir, exist_ok=True)
 
     for electrode in electrode_list:
@@ -116,7 +112,6 @@ if args.sig_elec_name:
         if not labels:
             print('Header Missing')
         electrode_num = labels.index(elec_name)
-        print(sid, elec_name, electrode_num + 1)
 
         brain_dir = os.path.join(CONV_DIR, sid, BRAIN_DIR_STR)
         electrode_file = os.path.join(
