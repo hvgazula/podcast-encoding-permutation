@@ -248,8 +248,7 @@ def load_header(conversation_dir, subject_id):
 
 def encoding_regression(args, sid, datum, elec_signal, name):
     elecDir = ''.join([
-        args.outName, '-', sid, '_160_200ms_',
-        args.word_value, args.pilot, '/'
+        args.outName, '-', sid, '_160_200ms_', args.word_value, args.pilot, '/'
     ])
     elecDir = os.path.join(os.getcwd(), 'Results', elecDir)
     os.makedirs(elecDir, exist_ok=True)

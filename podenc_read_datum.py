@@ -7,9 +7,9 @@ import pandas as pd
 # import statistics
 
 
-def read_datum(args, DATUM_DIR):
-    df = pd.read_csv(os.path.join(DATUM_DIR, args.datum_emb_fn), header=0)
-    print(os.path.join(DATUM_DIR, args.datum_emb_fn))
+def read_datum(args):
+    df = pd.read_csv(os.path.join(args.DATUM_DIR, args.datum_emb_fn), header=0)
+    print(os.path.join(args.DATUM_DIR, args.datum_emb_fn))
 
     if args.nonWords:
         df = df[df.is_nonword == 0]
