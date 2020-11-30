@@ -4,7 +4,7 @@ import os
 import mat73
 import numpy as np
 from numba import jit, prange
-from scipy import signal, stats
+from scipy import stats
 from sklearn.model_selection import KFold
 
 
@@ -18,11 +18,10 @@ def encColCorr(CA, CB):
     Returns:
         [type]: [description]
     """
-    # assert CA.shape == CB.shape
     df = np.shape(CA)[0] - 2
 
-    CA = signal.detrend(CA, axis=0, type='constant')
-    CB = signal.detrend(CB, axis=0, type='constant')
+    CA -= np.mean(CA, axis=0)
+    CB -= np.mean(CB, axis=0)
 
     r = np.sum(CA * CB, 0) / np.sqrt(np.sum(CA * CA, 0) * np.sum(CB * CB, 0))
 
@@ -87,10 +86,15 @@ def cv_lm_003(X, Y, kfolds):
         Ytra, Ytes = Y[train_index], Y[test_index]
 
         # Mean-center
-        Xtra = signal.detrend(Xtra, axis=0, type='constant')
-        Xtes = signal.detrend(Xtes, axis=0, type='constant')
-        Ytra = signal.detrend(Ytra, axis=0, type='constant')
-        Ytes = signal.detrend(Ytes, axis=0, type='constant')
+        # Xtra = signal.detrend(Xtra, axis=0, type='constant')
+        # Xtes = signal.detrend(Xtes, axis=0, type='constant')
+        # Ytra = signal.detrend(Ytra, axis=0, type='constant')
+        # Ytes = signal.detrend(Ytes, axis=0, type='constant')
+
+        Xtra -= np.mean(Xtra, axis=0)
+        Xtes -= np.mean(Xtes, axis=0)
+        Ytra -= np.mean(Ytra, axis=0)
+        Ytes -= np.mean(Ytes, axis=0)
 
         # Fit model
         B = fit_model(Xtra, Ytra)
@@ -115,8 +119,7 @@ def fit_model(Xtra, Ytra):
     Returns:
         [type]: [description]
     """
-    lamb = 0
-    XtX_lamb = Xtra.T.dot(Xtra) + lamb * np.eye(Xtra.shape[1])
+    XtX_lamb = Xtra.T.dot(Xtra)
     XtY = Xtra.T.dot(Ytra)
     B = np.linalg.solve(XtX_lamb, XtY)
     return B
