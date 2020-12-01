@@ -17,10 +17,10 @@ def paired_permutation(X, Y, num_perm):
 
     distribution = np.zeros((1, num_perm))
 
-    shuffle = [ones(1,n/2) -1*ones(1,n/2)]; 
+    shuffle = [ones(1,n/2) -1*ones(1,n/2)]
     for num in range(num_perm):
         s = shuffle(randperm(n))
-        distribution(i)=mean(s.*(X-Y)); %randomly swapy xj-yj with yj-xj
+        distribution(i)=mean(s.*(X-Y)) # %randomly swapy xj-yj with yj-xj
 
     p_val = mean(true_score > distribution)
 

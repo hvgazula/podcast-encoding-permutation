@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from scipy.io import loadmat
 
-
 mainDir = '/mnt/bucket/labs/hasson/ariel/247/'
 logdir = os.path.join(mainDir, 'models/encoding/log/50d_removeNonWords/')
 convDir = os.path.join(mainDir, 'conversation_space/crude-conversations/Podcast/')

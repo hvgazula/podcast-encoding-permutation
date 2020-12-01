@@ -1,7 +1,7 @@
 CMD := echo
 CMD := sbatch submit.sh
 CMD := python
-CMD := sbatch --array=1-50 submit.sh
+# CMD := sbatch --array=1-50 submit.sh
 FILE := main
 
 # username
@@ -27,7 +27,7 @@ SID := 661
 # E_LIST := $(shell seq 2500 2560) # bert bert50d-glove50d-diff-sig-elec-01-116-abs
 # E_LIST := $(shell seq 2600 2673) # gpt2-glove-50d-previous-diff-sig-elec-01-116
 # E_LIST := $(shell seq 800 915) # 116 - GLoVe 5000 (0.01 sig)
-# E_LIST := $(shell seq 1)
+E_LIST := $(shell seq 1)
 
 # 116 - 717
 # E_LIST=10 27 36 37 38 4 47 112 113 114 116 117 119 120 121 122 126 71 74 75 \
@@ -58,7 +58,8 @@ NW := nonWords
 WV := all
 NP := 500
 LAGS := {-2000..2000..25}
-SH := --shuffle
+# SH := --shuffle
+# PSH := --phase-shuffle
 DT := $(shell date +"%Y%m%d")
 WS := 200
 GPT2 := 1
@@ -81,6 +82,7 @@ run-perm-cluster:
 		--sig-elec-name $(SE) \
 		--min-word-freq $(MWF) \
 		$(SH) \
+		$(PSH) \
 		--outName $(DT)-$(USR)-$(WS)ms; \
 
 # Array jobs
