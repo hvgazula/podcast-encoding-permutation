@@ -3,8 +3,6 @@
 #SBATCH --mem=4GB
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-##SBATCH --ntasks-per-node=1
-##SBATCH --ntasks-per-socket=1
 #SBATCH -o './logs/%A-%a.out'
 #SBATCH -e './logs/%A.err'
 
@@ -24,7 +22,6 @@ echo 'Node:' $HOSTNAME
 echo "$@"
 if [[ -v SLURM_ARRAY_TASK_ID ]]
 then
-    echo "array job"
     python "$@" --electrodes $SLURM_ARRAY_TASK_ID
 else
     python "$@"

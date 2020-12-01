@@ -1,7 +1,7 @@
 CMD := echo
 CMD := sbatch submit.sh
 CMD := python
-CMD := sbatch --array=1-200 submit.sh
+CMD := sbatch --array=1-50 submit.sh
 FILE := main
 
 # username
@@ -65,27 +65,8 @@ GPT2 := 1
 GLOVE := 1
 MWF := 1
 
-# submit on the cluster (one job for each electrode)
-run-perm-cluster:
-	for elec in $(E_LIST); do \
-		$(CMD) podenc_$(FILE).py \
-			--sid $(SID) \
-			--electrodes $$elec \
-			--datum-emb-fn $(DS) \
-			--window-size $(WS) \
-			--word-value $(WV) \
-			--$(NW) \
-			--glove $(GLOVE) \
-			--gpt2 $(GPT2) \
-			--npermutations $(NP) \
-			--lags $(LAGS) \
-			--sig-elec-name $(SE) \
-			--min-word-freq $(MWF) \
-			$(SH) \
-			--outName $(DT)-$(USR)-$(WS)ms; \
-	done
 
-run-perm-cluster1:
+run-perm-cluster:
 	$(CMD) podenc_$(FILE).py \
 		--sid $(SID) \
 		--electrodes $(E_LIST) \
@@ -103,8 +84,9 @@ run-perm-cluster1:
 		--outName $(DT)-$(USR)-$(WS)ms; \
 
 # Array jobs
+# submit on the cluster (one job for each electrode)
 run-perm-array:
-	$(shell mkdir logs)
+	mkdir -p logs
 	$(CMD) podenc_$(FILE).py \
 		--sid $(SID) \
 		--datum-emb-fn $(DS) \
@@ -119,22 +101,3 @@ run-perm-array:
 		--min-word-freq $(MWF) \
 		$(SH) \
 		--outName $(DT)-$(USR)-$(WS)ms; \
-
-
-# All electrodes in one job
-run-perm-cmd:
-	for elec in $(E_LIST); do \
-		$(CMD) podcast-$(FILE).py \
-			--sid 661 \
-			--datum-emb-fn $(DS) \
-			--word-value $(WV) \
-			--$(NW) \
-			--glove 1 \
-			--electrode $$elec \
-			--lags $(LAGS) \
-			--npermutations $(NP) \
-			$(SH) \
-			--outName $(SID)-$(USR)-test1 & \
-	done
-
-	CMD := python
