@@ -1,12 +1,14 @@
 import csv
 import os
+import sys
 
 import mat73
 import numpy as np
 from numba import jit, prange
 from scipy import stats
 from sklearn.model_selection import KFold
-from podend_phase_shuffle import phase_shuffle
+
+from podenc_phase_shuffle import phase_shuffle
 
 
 def encColCorr(CA, CB):
@@ -143,7 +145,7 @@ def build_Y(onsets, brain_signal, lags, window_size):
     half_window = round((window_size / 1000) * 512 / 2)
     t = len(brain_signal)
 
-    Y = np.zeros((len(onsets), len(lags)))
+    Y1 = np.zeros((len(onsets), len(lags), 2 * half_window + 1))
 
     for lag in prange(len(lags)):
         lag_amount = int(lags[lag] / 1000 * 512)
@@ -157,10 +159,22 @@ def build_Y(onsets, brain_signal, lags, window_size):
         starts = index_onsets - half_window - 1
         stops = index_onsets + half_window
 
+        starts = starts.astype(int)
+        stops = stops.astype(int)
+
         for i, (start, stop) in enumerate(zip(starts, stops)):
-            Y[i, lag] = np.mean(brain_signal[start:stop])
+            Y1[i, lag, :] = brain_signal[start:stop].reshape(-1)
 
     return Y
+
+
+def make_Y(onsets, brain_signal, lags, window_size):
+    Y = build_Y(onsets, brain_signal, lags, window_size)
+
+    if args.phase_shuffle:
+        pass 
+    else:
+        Y = np.mean(Y, axis=-1)
 
 
 def build_XY(args, datum, brain_signal):
