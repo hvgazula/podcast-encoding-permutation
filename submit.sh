@@ -1,33 +1,32 @@
 #!/bin/bash
-#SBATCH --time=00:00:60
+#SBATCH --time=00:30:00
 #SBATCH --mem=4GB
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --ntasks-per-socket=1
-#SBATCH -o '%A.out'
-#SBATCH -e '%A.err'
+##SBATCH --ntasks-per-node=1
+##SBATCH --ntasks-per-socket=1
+#SBATCH -o './logs/%A-%a.out'
+#SBATCH -e './logs/%A.err'
 
-# if [[ "$HOSTNAME" == *"tiger"* ]]
-# then
-#     echo "It's tiger"
-#     module load anaconda
-#     source activate torch-env
-# else
-#     module load anacondapy
-#     source activate srm
-# fi
-
-# if [[ "$HOSTNAME" == *"tiger"* ]]
-# then
-#     echo "It's tiger"
-#     # module load anaconda
-#     # source activate torch-env
-# fi
+if [[ "$HOSTNAME" == *"tiger"* ]]
+then
+    echo "It's tiger"
+    module load anaconda
+    source activate torch-env
+else
+    module load anacondapy
+    source activate srm
+fi
 
 echo 'Requester:' $USER
 echo 'Node:' $HOSTNAME
 # echo 'Start time:' `date`
 echo "$@"
-python "$@"
+if [[ -v SLURM_ARRAY_TASK_ID ]]
+then
+    echo "array job"
+    python "$@" --electrodes $SLURM_ARRAY_TASK_ID
+else
+    python "$@"
+fi
 # echo 'End time:' `date`

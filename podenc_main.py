@@ -57,7 +57,7 @@ def setup_environ(args):
             BRAIN_DIR_STR = 'preprocessed'
         else:
             BRAIN_DIR_STR = 'preprocessed-ica'
-    elif 'scotty' in hostname:
+    elif 'tiger' not in hostname:
         tiger = 0
         PROJ_DIR = '/mnt/bucket/labs/hasson/ariel/247/'
         DATUM_DIR = os.path.join(PROJ_DIR, 'models/podcast-datums')
