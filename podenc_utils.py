@@ -278,7 +278,7 @@ def encoding_regression(args, sid, datum, elec_signal, name):
     prod_Y = Y[datum.speaker == 'Speaker1', :]
     comp_Y = Y[datum.speaker != 'Speaker1', :]
 
-    print(f'{sid} {name} Prod: {prod_X.shape[0]} Comp: {comp_X.shape[0]}')
+    print(f'{sid} {name} Prod: {len(prod_X)} Comp: {len(comp_X)}')
 
     output_dir = create_output_directory(args, sid)
 
