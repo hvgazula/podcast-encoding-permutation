@@ -169,7 +169,7 @@ def make_Y(args, onsets, brain_signal, lags, window_size):
     Y = build_Y(onsets, brain_signal, lags, window_size)
 
     if args.phase_shuffle:
-        pass 
+        pass
     else:
         Y = np.mean(Y, axis=-1)
 

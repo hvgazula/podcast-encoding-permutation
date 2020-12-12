@@ -1,6 +1,7 @@
 import math
 
 import numpy as np
+from scipy.fftpack import fft, ifft
 
 
 def phase_shuffle(input_signal, signal_dim):
@@ -8,16 +9,17 @@ def phase_shuffle(input_signal, signal_dim):
     # phase information.
 
     N = input_signal.shape[signal_dim]
+
     if N % 2:
         h = input_signal[-1]
         input_signal = input_signal[:-1]
 
     F = abs(np.fft.fft(input_signal))
     t = np.zeros(F.shape)
-    t[1:math.
+    t[:, 1:math.
       floor(N /
             2)] = np.random.rand(math.floor(N / 2) - 1) * 2 * math.pi - math.pi
-    t[(math.floor(N / 2) + 1):] = -t[math.floor(N / 2) - 1:0:-1]
+    t[:, (math.floor(N / 2) + 1)] = -t[math.floor(N / 2) - 1:0:-1]
 
     output_signal = abs(np.fft.ifft(F * np.exp(1j * t)))
 
@@ -27,31 +29,37 @@ def phase_shuffle(input_signal, signal_dim):
     return output_signal
 
 
-def phase_shuffleg(input_signal, signal_dim):
+def phase_randomize(data):
     # Returns a vector of the same size and amplitude spectrum but with shuffled
     # phase information.
+    # Adapted from
+    # https://github.com/brainiak/brainiak/blob/master/brainiak/utils/utils.py
 
-    N = input_signal.shape[signal_dim]
-    if N % 2:
-        h = np.take(input_signal, -1, axis=signal_dim)
-        input_signal = np.delete(input_signal, -1, axis=signal_dim)
+    n_examples, n_lags, n_samples = data.shape
 
-    F = abs(np.fft.fft(input_signal, axis=signal_dim))
-    t = np.zeros(F.shape)
+    # Get randomized phase shifts
+    if n_samples % 2 == 0:
+        pos_freq = np.arange(1, n_samples // 2)
+        neg_freq = np.arange(n_samples - 1, n_samples // 2, -1)
+    else:
+        pos_freq = np.arange(1, (n_samples - 1) // 2 + 1)
+        neg_freq = np.arange(n_samples - 1, (n_samples - 1) // 2, -1)
 
-    # the following 2 lines need to be replaced
-    t[:, :, 1:math.
-      floor(N /
-            2)] = np.random.rand() * 2 * math.pi - math.pi
-    t[(math.floor(N / 2) + 1):] = -t[math.floor(N / 2) - 1:0:-1]
+    phase_shifts = (np.random.rand(n_examples, n_lags, len(pos_freq)) * 2 *
+                    np.math.pi)
 
-    output_signal = abs(np.fft.ifft(F * np.exp(1j * t), axis=signal_dim))
-    if N % 2:
-        output_signal = np.stack([output_signal, h], axis=signal_dim)
+    # Fast Fourier transform along time dimension of data
+    fft_data = np.fft.fft(data, axis=-1)
 
-    return output_signal
+    # Shift pos and neg frequencies symmetrically, to keep signal real
+    fft_data[:, :, pos_freq] *= np.exp(1j * phase_shifts)
+    fft_data[:, :, neg_freq] *= np.exp(-1j * phase_shifts)
+
+    # Inverse FFT to put data back in time domain
+    shifted_data = np.real(ifft(fft_data, axis=-1))
+
+    return shifted_data
 
 
 if __name__ == '__main__':
-    input_vec = np.arange(1, 101)
-    output_vec = phase_shuffle(input_vec, 1)
+    output_vec0 = phase_randomize(np.random.rand(150, 50, 100))

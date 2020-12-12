@@ -3,6 +3,7 @@ import socket
 
 import numpy as np
 import pandas as pd
+
 '''
 This script generate random (static) embeddings of the desired dimension
 Requires: A sample datum file from which the metadata is extracted.
