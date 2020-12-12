@@ -39,26 +39,20 @@ def read_datum(args):
     ]
 
     if args.word_value == 'all':
-        datum = df[col_names]
-    elif args.word_value == 'bottom':
-        df = df.dropna(subset=['gpt2_xl_target_prob', 'human_target_prob'])
-        denom = 3
-        if args.pilot == 'GPT2':
-            pred = df.gpt2_xl_target_prob
-        elif args.pilot == 'mturk':
-            pred = df.human_target_prob
-        m = sorted(pred)
-        # med = statistics.median(m)
+        return df[col_names]
+
+    df = df.dropna(subset=['gpt2_xl_target_prob', 'human_target_prob'])
+    denom = 3
+    if args.pilot == 'GPT2':
+        pred = df.gpt2_xl_target_prob
+    elif args.pilot == 'mturk':
+        pred = df.human_target_prob
+    m = sorted(pred)
+    # med = statistics.median(m)
+
+    if args.word_value == 'bottom':
         datum = df[pred <= m[np.ceil(len(m) / denom)], col_names]
     elif args.word_value == 'top':
-        df = df.dropna(subset=['gpt2_xl_target_prob', 'human_target_prob'])
-        denom = 3
-        if args.pilot == 'GPT2':
-            pred = df.gpt2_xl_target_prob
-        elif args.pilot == 'mturk':
-            pred = df.human_target_prob
-        m = sorted(pred)
-        # med = statistics.median(m)
         datum = df[pred >= m[len(m) - np.ceil(len(m) / denom)], col_names]
     else:
         raise Exception('Cannot recognize keyword')
