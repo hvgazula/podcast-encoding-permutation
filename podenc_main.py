@@ -98,7 +98,7 @@ def process_subjects(args, datum):
     assert len(filesb) <= len(labels)
 
     elecDir = ''.join([
-        args.outName, '-', sid, '_160_200ms_', args.word_value, args.pilot, '/'
+        args.outName, '-', sid, '-', args.word_value, args.pilot
     ])
     elecDir = os.path.join(os.getcwd(), 'Results', elecDir)
     os.makedirs(elecDir, exist_ok=True)
