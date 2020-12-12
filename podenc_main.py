@@ -59,18 +59,13 @@ def setup_environ(args):
             BRAIN_DIR_STR = 'preprocessed'
         else:
             BRAIN_DIR_STR = 'preprocessed-ica'
-    elif 'tiger' not in hostname:
+    else:
         tiger = 0
         PROJ_DIR = '/mnt/bucket/labs/hasson/ariel/247/'
         DATUM_DIR = os.path.join(PROJ_DIR, 'models/podcast-datums')
         CONV_DIR = os.path.join(
             PROJ_DIR, 'conversation_space/crude-conversations/Podcast')
         BRAIN_DIR_STR = 'preprocessed_all'
-    else:
-        tiger = 0
-        PROJ_DIR = None
-        print("Could not find PROJ_DIR. Please specify it here.")
-        sys.exit()
 
     path_dict = dict(PROJ_DIR=PROJ_DIR,
                      DATUM_DIR=DATUM_DIR,
@@ -85,6 +80,10 @@ def setup_environ(args):
 
 
 def process_subjects(args):
+    """Run encoding on particular subject (for now requires specifying
+    electrodes)
+    TODO: Run of all available electrodes without having to specify
+    """
     if args.sid and args.electrodes:
         sid = 'NY' + str(args.sid) + '_111_Part1_conversation1'
         brain_dir = os.path.join(args.CONV_DIR, sid, args.BRAIN_DIR_STR)
@@ -116,22 +115,29 @@ def process_subjects(args):
 
 
 def process_sig_electrodes(args):
+    """Run encoding on select significant elctrodes specified by a file 
+    """
     flag = 'prediction_presentation' if not args.tiger else ''
+
+    # Read in the significant electrodes
     sig_elec_file = os.path.join(args.PROJ_DIR, flag, args.sig_elec_name)
     sig_elec_list = pd.read_csv(sig_elec_file, header=None)[0].tolist()
 
+    # Loop over each electrode
     for sig_elec in sig_elec_list:
-        sid, elec_name = sig_elec[:29], sig_elec[30:]
+        subject_id, elec_name = sig_elec[:29], sig_elec[30:]
 
-        labels = load_header(args.CONV_DIR, sid)
+        # Read subject's header
+        labels = load_header(args.CONV_DIR, subject_id)
         if not labels:
             print('Header Missing')
         electrode_num = labels.index(elec_name)
 
-        brain_dir = os.path.join(args.CONV_DIR, sid, args.BRAIN_DIR_STR)
+        # Read electrode data
+        brain_dir = os.path.join(args.CONV_DIR, subject_id, args.BRAIN_DIR_STR)
         electrode_file = os.path.join(
             brain_dir, ''.join([
-                sid, '_electrode_preprocess_file_',
+                subject_id, '_electrode_preprocess_file_',
                 str(electrode_num + 1), '.mat'
             ]))
         try:
@@ -140,7 +146,8 @@ def process_sig_electrodes(args):
             print(f'Missing: {electrode_file}')
             continue
 
-        encoding_regression(args, sid, datum, elec_signal, elec_name)
+        # Perform encoding/regression
+        encoding_regression(args, subject_id, datum, elec_signal, elec_name)
 
     return
 
@@ -158,6 +165,7 @@ if __name__ == "__main__":
     # Locate and read datum
     datum = read_datum(args)
 
+    # Processing significant electrodes or individual subjects
     if args.sig_elec_name:
         process_sig_electrodes(args)
     else:
