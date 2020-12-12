@@ -84,32 +84,31 @@ def process_subjects(args):
     electrodes)
     TODO: Run of all available electrodes without having to specify
     """
-    if args.sid and args.electrodes:
-        sid = 'NY' + str(args.sid) + '_111_Part1_conversation1'
-        brain_dir = os.path.join(args.CONV_DIR, sid, args.BRAIN_DIR_STR)
+    sid = 'NY' + str(args.sid) + '_111_Part1_conversation1'
+    brain_dir = os.path.join(args.CONV_DIR, sid, args.BRAIN_DIR_STR)
 
-        filesb = glob.glob(os.path.join(brain_dir, '*.mat'))
-        filesb = sorted(
-            filesb, key=lambda x: int(os.path.splitext(x)[0].split('_')[-1]))
+    filesb = glob.glob(os.path.join(brain_dir, '*.mat'))
+    filesb = sorted(
+        filesb, key=lambda x: int(os.path.splitext(x)[0].split('_')[-1]))
 
-        electrode_list = args.electrodes
-        labels = load_header(args.CONV_DIR, sid)
+    electrode_list = args.electrodes
+    labels = load_header(args.CONV_DIR, sid)
 
-        # number of labels in header == number of electrode mat files
-        assert len(filesb) <= len(labels)
+    # number of labels in header == number of electrode mat files
+    assert len(filesb) <= len(labels)
 
-        elecDir = ''.join([
-            args.outName, '-', sid, '_160_200ms_', args.word_value, args.pilot,
-            '/'
-        ])
-        elecDir = os.path.join(os.getcwd(), 'Results', elecDir)
-        os.makedirs(elecDir, exist_ok=True)
+    elecDir = ''.join([
+        args.outName, '-', sid, '_160_200ms_', args.word_value, args.pilot,
+        '/'
+    ])
+    elecDir = os.path.join(os.getcwd(), 'Results', elecDir)
+    os.makedirs(elecDir, exist_ok=True)
 
-        for electrode in electrode_list:
-            elec_signal = loadmat(filesb[electrode])['p1st']
-            name = labels[electrode]
+    for electrode in electrode_list:
+        elec_signal = loadmat(filesb[electrode])['p1st']
+        name = labels[electrode]
 
-            encoding_regression(args, sid, datum, elec_signal, name)
+        encoding_regression(args, sid, datum, elec_signal, name)
 
     return
 
