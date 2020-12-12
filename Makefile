@@ -81,7 +81,7 @@ run-perm-cluster:
 		--gpt2 $(GPT2) \
 		--npermutations $(NP) \
 		--lags $(LAGS) \
-		--sig-elec-name $(SE) \
+		--sig-elec-file $(SE) \
 		--min-word-freq $(MWF) \
 		$(SH) \
 		$(PSH) \

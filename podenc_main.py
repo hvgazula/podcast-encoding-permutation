@@ -42,7 +42,7 @@ def parse_arguments():
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--sid', nargs='?', type=int, default=None)
-    group.add_argument('--sig-elec-name', nargs='?', type=str, default=None)
+    group.add_argument('--sig-elec-file', nargs='?', type=str, default=None)
 
     args = parser.parse_args()
 
@@ -121,7 +121,7 @@ def process_sig_electrodes(args, datum):
     flag = 'prediction_presentation' if not args.tiger else ''
 
     # Read in the significant electrodes
-    sig_elec_file = os.path.join(args.PROJ_DIR, flag, args.sig_elec_name)
+    sig_elec_file = os.path.join(args.PROJ_DIR, flag, args.sig_elec_file)
     sig_elec_list = pd.read_csv(sig_elec_file, header=None)[0].tolist()
 
     # Loop over each electrode
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     datum = read_datum(args)
 
     # Processing significant electrodes or individual subjects
-    if args.sig_elec_name:
+    if args.sig_elec_file:
         process_sig_electrodes(args, datum)
     else:
         process_subjects(args, datum)
