@@ -79,7 +79,7 @@ def setup_environ(args):
     return args
 
 
-def process_subjects(args):
+def process_subjects(args, datum):
     """Run encoding on particular subject (for now requires specifying
     electrodes)
     TODO: Run of all available electrodes without having to specify
@@ -88,8 +88,8 @@ def process_subjects(args):
     brain_dir = os.path.join(args.CONV_DIR, sid, args.BRAIN_DIR_STR)
 
     filesb = glob.glob(os.path.join(brain_dir, '*.mat'))
-    filesb = sorted(
-        filesb, key=lambda x: int(os.path.splitext(x)[0].split('_')[-1]))
+    filesb = sorted(filesb,
+                    key=lambda x: int(os.path.splitext(x)[0].split('_')[-1]))
 
     electrode_list = args.electrodes
     labels = load_header(args.CONV_DIR, sid)
@@ -98,22 +98,23 @@ def process_subjects(args):
     assert len(filesb) <= len(labels)
 
     elecDir = ''.join([
-        args.outName, '-', sid, '_160_200ms_', args.word_value, args.pilot,
-        '/'
+        args.outName, '-', sid, '_160_200ms_', args.word_value, args.pilot, '/'
     ])
     elecDir = os.path.join(os.getcwd(), 'Results', elecDir)
     os.makedirs(elecDir, exist_ok=True)
 
+    # Loop over each electrode
     for electrode in electrode_list:
         elec_signal = loadmat(filesb[electrode])['p1st']
         name = labels[electrode]
 
+        # Perform encoding/regression
         encoding_regression(args, sid, datum, elec_signal, name)
 
     return
 
 
-def process_sig_electrodes(args):
+def process_sig_electrodes(args, datum):
     """Run encoding on select significant elctrodes specified by a file 
     """
     flag = 'prediction_presentation' if not args.tiger else ''
@@ -166,11 +167,11 @@ if __name__ == "__main__":
 
     # Processing significant electrodes or individual subjects
     if args.sig_elec_name:
-        process_sig_electrodes(args)
+        process_sig_electrodes(args, datum)
     else:
-        process_subjects(args)
+        process_subjects(args, datum)
 
     end_time = datetime.now()
-
     print(f'End Time: {end_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
+    
     print(f'Total runtime: {end_time - start_time} (HH:MM:SS)')
