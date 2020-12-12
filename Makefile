@@ -27,7 +27,7 @@ SID := 661
 # E_LIST := $(shell seq 2500 2560) # bert bert50d-glove50d-diff-sig-elec-01-116-abs
 # E_LIST := $(shell seq 2600 2673) # gpt2-glove-50d-previous-diff-sig-elec-01-116
 # E_LIST := $(shell seq 800 915) # 116 - GLoVe 5000 (0.01 sig)
-E_LIST := $(shell seq 1)
+E_LIST := $(shell seq 1 10)
 
 # 116 - 717
 # E_LIST=10 27 36 37 38 4 47 112 113 114 116 117 119 120 121 122 126 71 74 75 \
@@ -56,18 +56,20 @@ DS := podcast-datum-glove-50d.csv
 # SE := 5000-sig-elec-50d-onethresh-01.csv
 NW := nonWords
 WV := all
-NP := 500
+NP := 2
 LAGS := {-2000..2000..25}
-# SH := --shuffle
-# PSH := --phase-shuffle
 DT := $(shell date +"%Y%m%d")
 WS := 200
 GPT2 := 1
 GLOVE := 1
 MWF := 1
+# SH := --shuffle
+# PSH := --phase-shuffle
+# PIL := mturk
 
 
 run-perm-cluster:
+	mkdir -p logs
 	$(CMD) podenc_$(FILE).py \
 		--sid $(SID) \
 		--electrodes $(E_LIST) \
@@ -83,7 +85,7 @@ run-perm-cluster:
 		--min-word-freq $(MWF) \
 		$(SH) \
 		$(PSH) \
-		--outName $(DT)-$(USR)-$(WS)ms; \
+		--outName $(DT)-$(USR)-$(WS)ms-$(WV)-$(PIL); \
 
 # Array jobs
 # submit on the cluster (one job for each electrode)
