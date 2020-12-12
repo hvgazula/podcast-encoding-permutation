@@ -4,14 +4,13 @@ import socket
 import numpy as np
 import pandas as pd
 
-'''
-This script generate random (static) embeddings of the desired dimension
-Requires: A sample datum file from which the metadata is extracted.
-Note: Embeddings are generated for each unique word (class) and then propagated
-      to other occurrences (instances of the same class)
-'''
-
 if __name__ == '__main__':
+    '''
+    This script generate random (static) embeddings of the desired dimension
+    Requires: A sample datum file from which the metadata is extracted.
+    Note: Embeddings are generated for each unique word (class) and then propagated
+    to other occurrences (instances of the same class)
+    '''
     # Setting the seed
     np.random.seed(0)
 
@@ -41,8 +40,9 @@ if __name__ == '__main__':
     df_current['word'] = df_current['word'].str.lower()
 
     # Keep aside the first part of the data_frame (metadata)
-    df_cols = df_current.columns.tolist(
-    )  # metadata columns + embedding columns (starting with '0')
+    df_cols = df_current.columns.tolist()
+
+    # metadata columns + embedding columns (starting with '0')
     df_c_orig_meta = df_current.drop(columns=df_cols[df_cols.index('0'):])
     df_subset_meta = df_current.drop_duplicates(subset=['word'])
 

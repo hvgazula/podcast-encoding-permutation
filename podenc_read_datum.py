@@ -34,7 +34,13 @@ def read_datum(args):
     df['embeddings'] = df[embedding_columns].values.tolist()
     df = df.drop(columns=embedding_columns)
 
-    if args.word_value == 'bottom':
+    col_names = [
+        'word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings'
+    ]
+
+    if args.word_value == 'all':
+        datum = df[col_names]
+    elif args.word_value == 'bottom':
         df = df.dropna(subset=['gpt2_xl_target_prob', 'human_target_prob'])
         denom = 3
         if args.pilot == 'GPT2':
@@ -43,24 +49,18 @@ def read_datum(args):
             pred = df.human_target_prob
         m = sorted(pred)
         # med = statistics.median(m)
-        datum = df[
-            pred <= m[np.ceil(len(m) / denom)],
-            ['word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings']]
-    elif args.word_value == 'all':
-        datum = df[[
-            'word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings'
-        ]]
+        datum = df[pred <= m[np.ceil(len(m) / denom)], col_names]
+    elif args.word_value == 'top':
+        df = df.dropna(subset=['gpt2_xl_target_prob', 'human_target_prob'])
+        denom = 3
+        if args.pilot == 'GPT2':
+            pred = df.gpt2_xl_target_prob
+        elif args.pilot == 'mturk':
+            pred = df.human_target_prob
+        m = sorted(pred)
+        # med = statistics.median(m)
+        datum = df[pred >= m[len(m) - np.ceil(len(m) / denom)], col_names]
     else:
-        df = df.dropna(subset=['gpt2_xl_target_prob', 'human_target_prob'])
-        denom = 3
-        if args.pilot == 'GPT2':
-            pred = df.gpt2_xl_target_prob
-        elif args.pilot == 'mturk':
-            pred = df.human_target_prob
-        m = sorted(pred)
-        # med = statistics.median(m)
-        datum = df[
-            pred >= m[len(m) - np.ceil(len(m) / denom)],
-            ['word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings']]
+        raise Exception('Cannot recognize keyword')
 
     return datum
