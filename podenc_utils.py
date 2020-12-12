@@ -159,22 +159,21 @@ def build_Y(onsets, brain_signal, lags, window_size):
         starts = index_onsets - half_window - 1
         stops = index_onsets + half_window
 
-        starts = starts.astype(int)
-        stops = stops.astype(int)
-
         for i, (start, stop) in enumerate(zip(starts, stops)):
             Y1[i, lag, :] = brain_signal[start:stop].reshape(-1)
 
-    return Y
+    return Y1
 
 
-def make_Y(onsets, brain_signal, lags, window_size):
+def make_Y(args, onsets, brain_signal, lags, window_size):
     Y = build_Y(onsets, brain_signal, lags, window_size)
 
     if args.phase_shuffle:
         pass 
     else:
         Y = np.mean(Y, axis=-1)
+
+    return Y
 
 
 def build_XY(args, datum, brain_signal):
@@ -196,7 +195,7 @@ def build_XY(args, datum, brain_signal):
     lags = np.array(args.lags)
     brain_signal = brain_signal.reshape(-1, 1)
 
-    Y = build_Y(onsets, brain_signal, lags, args.window_size)
+    Y = make_Y(args, onsets, brain_signal, lags, args.window_size)
 
     return X, Y
 
