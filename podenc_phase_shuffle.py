@@ -74,8 +74,7 @@ def phase_randomize_1d(data):
         neg_freq = np.arange(data.shape[0] - 1, data.shape[0] // 2, -1)
     else:
         pos_freq = np.arange(1, (data.shape[0] - 1) // 2 + 1)
-        neg_freq = np.arange(data.shape[0] - 1,
-                             (data.shape[0] - 1) // 2, -1)
+        neg_freq = np.arange(data.shape[0] - 1, (data.shape[0] - 1) // 2, -1)
 
     phase_shifts = np.random.rand(len(pos_freq), 1) * 2 * np.math.pi
 

@@ -166,7 +166,7 @@ def build_Y(onsets, brain_signal, lags, window_size):
 
 
 def make_Y(args, onsets, brain_signal, lags, window_size):
-    
+
     if args.phase_shuffle:
         # this block of code needs more work
         shifted_Y_stack = []

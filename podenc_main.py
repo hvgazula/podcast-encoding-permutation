@@ -116,8 +116,8 @@ def process_subjects(args):
 
 
 def process_sig_electrodes(args):
-    sig_elec_file = os.path.join(args.PROJ_DIR, 'prediction_presentation',
-                                 args.sig_elec_name)
+    flag = 'prediction_presentation' if tiger else ''
+    sig_elec_file = os.path.join(args.PROJ_DIR, flag, args.sig_elec_name)
     sig_elec_list = pd.read_csv(sig_elec_file, header=None)[0].tolist()
 
     for sig_elec in sig_elec_list:
