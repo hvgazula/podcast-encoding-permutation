@@ -8,7 +8,8 @@ import pandas as pd
 from scipy.io import loadmat
 
 from podenc_read_datum import read_datum
-from podenc_utils import encoding_regression, load_header
+from podenc_utils import (create_output_directory, encoding_regression,
+                          load_header)
 
 
 def parse_arguments():
@@ -97,12 +98,6 @@ def process_subjects(args, datum):
     # number of labels in header == number of electrode mat files
     assert len(filesb) <= len(labels)
 
-    elecDir = ''.join([
-        args.outName, '-', sid, '-', args.word_value, args.pilot
-    ])
-    elecDir = os.path.join(os.getcwd(), 'Results', elecDir)
-    os.makedirs(elecDir, exist_ok=True)
-
     # Loop over each electrode
     for electrode in electrode_list:
         elec_signal = loadmat(filesb[electrode])['p1st']
@@ -173,5 +168,5 @@ if __name__ == "__main__":
 
     end_time = datetime.now()
     print(f'End Time: {end_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
-    
+
     print(f'Total runtime: {end_time - start_time} (HH:MM:SS)')

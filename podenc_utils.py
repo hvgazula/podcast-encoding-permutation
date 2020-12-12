@@ -169,7 +169,7 @@ def make_Y(args, onsets, brain_signal, lags, window_size):
     Y = build_Y(onsets, brain_signal, lags, window_size)
 
     if args.phase_shuffle:
-        pass 
+        pass
     else:
         Y = np.mean(Y, axis=-1)
 
@@ -244,10 +244,10 @@ def load_header(conversation_dir, subject_id):
 
     Args:
         conversation_dir ([type]): [description]
-        subject_id ([type]): [description]
+        subject_id (string): Subject ID
 
     Returns:
-        [type]: [description]
+        list: labels
     """
     misc_dir = os.path.join(conversation_dir, subject_id, 'misc')
     header_file = os.path.join(misc_dir, subject_id + '_header.mat')
@@ -259,12 +259,14 @@ def load_header(conversation_dir, subject_id):
     return labels
 
 
-def encoding_regression(args, sid, datum, elec_signal, name):
-    elecDir = ''.join([
-        args.outName, '-', sid, '-', args.word_value, args.pilot
-    ])
+def create_output_directory(args, sid):
+    elecDir = '-'.join([args.outName, sid])
     elecDir = os.path.join(os.getcwd(), 'Results', elecDir)
     os.makedirs(elecDir, exist_ok=True)
+    return elecDir
+
+
+def encoding_regression(args, sid, datum, elec_signal, name):
 
     # Build design matrices
     X, Y = build_XY(args, datum, elec_signal)
@@ -278,11 +280,13 @@ def encoding_regression(args, sid, datum, elec_signal, name):
 
     print(f'{sid} {name} Prod: {prod_X.shape[0]} Comp: {comp_X.shape[0]}')
 
+    output_dir = create_output_directory(args, sid)
+
     # Run permutation and save results
-    filename = ''.join([elecDir, name, '_prod.csv'])
+    filename = os.path.join(output_dir, name + '_prod.csv')
     run_save_permutation(args, prod_X, prod_Y, filename)
 
-    filename = ''.join([elecDir, name, '_comp.csv'])
+    filename = os.path.join(output_dir, name + '_comp.csv')
     run_save_permutation(args, comp_X, comp_Y, filename)
 
     return

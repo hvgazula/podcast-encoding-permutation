@@ -9,7 +9,6 @@ import pandas as pd
 
 def read_datum(args):
     df = pd.read_csv(os.path.join(args.DATUM_DIR, args.datum_emb_fn), header=0)
-    print(os.path.join(args.DATUM_DIR, args.datum_emb_fn))
 
     if args.nonWords:
         df = df[df.is_nonword == 0]
