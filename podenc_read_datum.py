@@ -8,8 +8,21 @@ import pandas as pd
 
 
 def read_datum(args):
+    """Read and process the datum based on input arguments
+
+    Args:
+        args (namespace): commandline arguments
+
+    Raises:
+        Exception: args.word_value should be one of ['top', 'bottom', 'all']
+
+    Returns:
+        DataFrame: processed datum
+    """
+    # Load datum file
     df = pd.read_csv(os.path.join(args.DATUM_DIR, args.datum_emb_fn), header=0)
 
+    # Filter/Align across language models
     if args.nonWords:
         df = df[df.is_nonword == 0]
     if args.gpt2:
@@ -23,12 +36,17 @@ def read_datum(args):
 
     # df = df[df.in_roberta == 1]
 
+    # Filter words on minimum frequency
     if args.min_word_freq:
         df = df[df.uncased_freq >= args.min_word_freq]
 
-    df_cols = df.columns.tolist()
-    embedding_columns = df_cols[df_cols.index('0'):]
+    # Drop stopwords
     df = df[~df['word'].isin(['sp', '{lg}', '{ns}', '{inaudible}'])]
+
+    # Find, combine and drop embedding columns 
+    df_cols = df.columns.to_list()
+    embedding_columns = df_cols[df_cols.index('0'):]
+    
     df = df.dropna(subset=embedding_columns)
 
     df['embeddings'] = df[embedding_columns].values.tolist()

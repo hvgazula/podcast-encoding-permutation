@@ -13,6 +13,11 @@ from podenc_utils import (create_output_directory, encoding_regression,
 
 
 def parse_arguments():
+    """Read commandline arguments
+
+    Returns:
+        Namespace: input as well as default arguments
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('--word-value', type=str, default='all')
     parser.add_argument('--window-size', type=int, default=200)
@@ -22,7 +27,7 @@ def parse_arguments():
     parser.add_argument('--stim', type=str, default='Podcast')
     parser.add_argument('--pilot', type=str, default='')
     parser.add_argument('--lags', nargs='+', type=int)
-    parser.add_argument('--outName', type=str, default='test')
+    parser.add_argument('--output-prefix', type=str, default='test')
     parser.add_argument('--nonWords', action='store_false', default=True)
     parser.add_argument('--datum-emb-fn',
                         type=str,
@@ -50,6 +55,8 @@ def parse_arguments():
 
 
 def setup_environ(args):
+    """Update args with project specific directories and other flags
+    """
     hostname = os.environ['HOSTNAME']
     if 'tiger' in hostname:
         tiger = 1
@@ -81,8 +88,8 @@ def setup_environ(args):
 
 
 def process_subjects(args, datum):
-    """Run encoding on particular subject (for now requires specifying
-    electrodes)
+    """Run encoding on particular subject (requires specifying electrodes)
+    
     TODO: Run of all available electrodes without having to specify
     """
     sid = 'NY' + str(args.sid) + '_111_Part1_conversation1'
@@ -92,14 +99,13 @@ def process_subjects(args, datum):
     filesb = sorted(filesb,
                     key=lambda x: int(os.path.splitext(x)[0].split('_')[-1]))
 
-    electrode_list = args.electrodes
     labels = load_header(args.CONV_DIR, sid)
 
     # number of labels in header == number of electrode mat files
     assert len(filesb) <= len(labels)
 
     # Loop over each electrode
-    for electrode in electrode_list:
+    for electrode in args.electrodes:
         elec_signal = loadmat(filesb[electrode])['p1st']
         name = labels[electrode]
 

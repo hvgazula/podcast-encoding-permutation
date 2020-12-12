@@ -85,7 +85,7 @@ run-perm-cluster:
 		--min-word-freq $(MWF) \
 		$(SH) \
 		$(PSH) \
-		--outName $(DT)-$(USR)-$(WS)ms-$(WV)-$(PIL); \
+		--output-prefix $(DT)-$(USR)-$(WS)ms-$(WV)-$(PIL); \
 
 # Array jobs
 # submit on the cluster (one job for each electrode)

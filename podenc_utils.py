@@ -89,11 +89,6 @@ def cv_lm_003(X, Y, kfolds):
         Ytra, Ytes = Y[train_index], Y[test_index]
 
         # Mean-center
-        # Xtra = signal.detrend(Xtra, axis=0, type='constant')
-        # Xtes = signal.detrend(Xtes, axis=0, type='constant')
-        # Ytra = signal.detrend(Ytra, axis=0, type='constant')
-        # Ytes = signal.detrend(Ytes, axis=0, type='constant')
-
         Xtra -= np.mean(Xtra, axis=0)
         Xtes -= np.mean(Xtes, axis=0)
         Ytra -= np.mean(Ytra, axis=0)
@@ -112,20 +107,14 @@ def cv_lm_003(X, Y, kfolds):
 
 
 @jit(nopython=True)
-def fit_model(Xtra, Ytra):
-    """[summary]
-
-    Args:
-        Xtra ([type]): [description]
-        Ytra ([type]): [description]
-
+def fit_model(X, y):
+    """Calculate weight vector using normal form of regression.
+    
     Returns:
-        [type]: [description]
+        [type]: (X'X)^-1 * (X'y)
     """
-    XtX_lamb = Xtra.T.dot(Xtra)
-    XtY = Xtra.T.dot(Ytra)
-    B = np.linalg.solve(XtX_lamb, XtY)
-    return B
+    beta = np.linalg.solve(X.T.dot(X), X.T.dot(y))
+    return beta
 
 
 @jit(nopython=True)
@@ -180,10 +169,9 @@ def build_XY(args, datum, brain_signal):
     """[summary]
 
     Args:
+        args ([type]): [description]
         datum ([type]): [description]
         brain_signal ([type]): [description]
-        lags ([type]): [description]
-        window_size ([type]): [description]
 
     Returns:
         [type]: [description]
@@ -260,10 +248,10 @@ def load_header(conversation_dir, subject_id):
 
 
 def create_output_directory(args, sid):
-    elecDir = '-'.join([args.outName, sid])
-    elecDir = os.path.join(os.getcwd(), 'Results', elecDir)
-    os.makedirs(elecDir, exist_ok=True)
-    return elecDir
+    folder_name = '-'.join([args.output_prefix, sid])
+    full_output_dir = os.path.join(os.getcwd(), 'Results', folder_name)
+    os.makedirs(full_output_dir, exist_ok=True)
+    return full_output_dir
 
 
 def encoding_regression(args, sid, datum, elec_signal, name):
