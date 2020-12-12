@@ -89,10 +89,13 @@ def phase_randomize_1d(data):
     # Inverse FFT to put data back in time domain
     shifted_data = np.real(ifft(fft_data, axis=-1))
 
+    # Make it a contiguous array (for numba compatibility])
+    shifted_data = np.ascontiguousarray(shifted_data)
+
     return shifted_data
 
 
 if __name__ == '__main__':
-    output_vec0 = phase_randomize_1d(np.random.rand(150))
+    input_vec = np.random.rand(10, 1)
+    output_vec0 = phase_randomize_1d(input_vec)
     print(output_vec0.shape)
-
