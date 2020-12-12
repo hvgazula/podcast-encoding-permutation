@@ -8,7 +8,7 @@ from numba import jit, prange
 from scipy import stats
 from sklearn.model_selection import KFold
 
-from podenc_phase_shuffle import phase_shuffle
+from podenc_phase_shuffle import phase_randomize_1d
 
 
 def encColCorr(CA, CB):
@@ -128,7 +128,7 @@ def fit_model(Xtra, Ytra):
     return B
 
 
-@jit(nopython=True)
+# @jit(nopython=True)
 def build_Y(onsets, brain_signal, lags, window_size):
     """[summary]
 
@@ -145,7 +145,7 @@ def build_Y(onsets, brain_signal, lags, window_size):
     half_window = round((window_size / 1000) * 512 / 2)
     t = len(brain_signal)
 
-    Y1 = np.zeros((len(onsets), len(lags), 2 * half_window + 1))
+    Y = np.zeros((len(onsets), len(lags), 2 * half_window + 1))
 
     for lag in prange(len(lags)):
         lag_amount = int(lags[lag] / 1000 * 512)
@@ -160,19 +160,25 @@ def build_Y(onsets, brain_signal, lags, window_size):
         stops = index_onsets + half_window
 
         for i, (start, stop) in enumerate(zip(starts, stops)):
-            Y1[i, lag, :] = brain_signal[start:stop].reshape(-1)
+            Y[i, lag, :] = brain_signal[:, start:stop].reshape(-1, 1)
 
-    return Y1
+    return Y
 
 
 def make_Y(args, onsets, brain_signal, lags, window_size):
-    Y = build_Y(onsets, brain_signal, lags, window_size)
-
+    
     if args.phase_shuffle:
-        pass
+        # this block of code needs more work
+        shifted_Y_stack = []
+        for _ in range(args.npermutations):
+            pr_brain_signal = np.zeros_like(brain_signal)
+            pr_brain_signal = phase_randomize_1d(brain_signal)
+            shifted_Y = build_Y(onsets, pr_brain_signal, lags, window_size)
+            shifted_Y_stack.append(shifted_Y)
+        Y = np.stack(shifted_Y_stack)
     else:
+        Y = build_Y(onsets, brain_signal, lags, window_size)
         Y = np.mean(Y, axis=-1)
-
     return Y
 
 

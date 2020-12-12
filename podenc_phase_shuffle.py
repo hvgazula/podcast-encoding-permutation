@@ -61,5 +61,38 @@ def phase_randomize(data):
     return shifted_data
 
 
+def phase_randomize_1d(data):
+    '''Adapted from
+    data is (n_examples, n_samples, n_electrodes)
+    https://github.com/brainiak/brainiak/blob/master/brainiak/utils/utils.py'''
+
+    n_samples = data.shape[0]
+
+    # Get randomized phase shifts
+    if n_samples % 2 == 0:
+        pos_freq = np.arange(1, data.shape[0] // 2)
+        neg_freq = np.arange(data.shape[0] - 1, data.shape[0] // 2, -1)
+    else:
+        pos_freq = np.arange(1, (data.shape[0] - 1) // 2 + 1)
+        neg_freq = np.arange(data.shape[0] - 1,
+                             (data.shape[0] - 1) // 2, -1)
+
+    phase_shifts = np.random.rand(len(pos_freq), 1) * 2 * np.math.pi
+
+    # Fast Fourier transform along time dimension of data
+    fft_data = fft(data, axis=-1)
+
+    # Shift pos and neg frequencies symmetrically, to keep signal real
+    fft_data[pos_freq, :] *= np.exp(1j * phase_shifts)
+    fft_data[neg_freq, :] *= np.exp(-1j * phase_shifts)
+
+    # Inverse FFT to put data back in time domain
+    shifted_data = np.real(ifft(fft_data, axis=-1))
+
+    return shifted_data
+
+
 if __name__ == '__main__':
-    output_vec0 = phase_randomize(np.random.rand(150, 50, 100))
+    output_vec0 = phase_randomize_1d(np.random.rand(150))
+    print(output_vec0.shape)
+
