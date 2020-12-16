@@ -28,7 +28,7 @@ def parse_arguments():
     parser.add_argument('--pilot', type=str, default='')
     parser.add_argument('--lags', nargs='+', type=int)
     parser.add_argument('--output-prefix', type=str, default='test')
-    parser.add_argument('--nonWords', action='store_false', default=True)
+    parser.add_argument('--nonWords', action='store_true', default=False)
     parser.add_argument('--datum-emb-fn',
                         type=str,
                         default='podcast-datum-glove-50d.csv')
