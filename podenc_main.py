@@ -36,7 +36,7 @@ def parse_arguments():
     parser.add_argument('--bert', type=int, default=None)
     parser.add_argument('--bart', type=int, default=None)
     parser.add_argument('--glove', type=int, default=1)
-    parser.add_argument('--electrodes', nargs='+', type=int)
+    parser.add_argument('--electrodes', nargs='*', type=int)
     parser.add_argument('--npermutations', type=int, default=1)
     parser.add_argument('--min-word-freq', nargs='?', type=int, default=1)
 
@@ -46,9 +46,7 @@ def parse_arguments():
 
     args = parser.parse_args()
 
-    if args.sid and not args.electrodes:
-        parser.error("--sid requires --electrodes")
-    elif not args.sid and args.electrodes:
+    if not args.sid and args.electrodes:
         parser.error("--electrodes requires --sid")
 
     return args
@@ -89,25 +87,40 @@ def setup_environ(args):
 
 def process_subjects(args, datum):
     """Run encoding on particular subject (requires specifying electrodes)
-    
-    TODO: Run of all available electrodes without having to specify
     """
     sid = 'NY' + str(args.sid) + '_111_Part1_conversation1'
     brain_dir = os.path.join(args.CONV_DIR, sid, args.BRAIN_DIR_STR)
 
-    filesb = glob.glob(os.path.join(brain_dir, '*.mat'))
-    filesb = sorted(filesb,
-                    key=lambda x: int(os.path.splitext(x)[0].split('_')[-1]))
-
     labels = load_header(args.CONV_DIR, sid)
 
+    # Load all mat files and sort them
+    all_files = glob.glob(os.path.join(brain_dir, '*.mat'))
+    all_files = sorted(
+        all_files, key=lambda x: int(os.path.splitext(x)[0].split('_')[-1]))
+
     # number of labels in header == number of electrode mat files
-    assert len(filesb) <= len(labels)
+    assert len(all_files) <= len(labels)
+
+    # If no electrodes are specified use all
+    if not args.electrodes:
+        args.electrodes = [
+            int(os.path.splitext(file)[0].split('_')[-1]) for file in all_files
+        ]
+        select_files = all_files
+    else:
+        # if specified select corresponding files
+        select_files = [
+            file for file in all_files if any(
+                str(idx) in file for idx in args.electrodes)
+        ]
 
     # Loop over each electrode
-    for electrode in args.electrodes:
-        elec_signal = loadmat(filesb[electrode])['p1st']
-        name = labels[electrode]
+    for file, electrode in zip(select_files, args.electrodes):
+        name = labels[electrode - 1]  # python indexing
+
+        if 'EKG' in name:
+            continue
+        elec_signal = loadmat(file)['p1st']
 
         # Perform encoding/regression
         encoding_regression(args, sid, datum, elec_signal, name)
