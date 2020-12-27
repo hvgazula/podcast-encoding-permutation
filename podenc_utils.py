@@ -255,7 +255,15 @@ def create_output_directory(args, sid):
 
 
 def encoding_regression(args, sid, datum, elec_signal, name):
+    """[summary]
 
+    Args:
+        args (Namespace): Command-line inputs and other configuration
+        sid (str): Subject ID
+        datum (DataFrame): ['word', 'onset', 'offset', 'speaker', 'accuracy']
+        elec_signal (numpy.ndarray): of shape (num_samples, 1)
+        name (str): electrode name
+    """    
     # Build design matrices
     X, Y = build_XY(args, datum, elec_signal)
 
