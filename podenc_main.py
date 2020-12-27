@@ -19,7 +19,9 @@ def parse_arguments():
         Namespace: input as well as default arguments
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--word-value', default='all', choices=['all', 'top', 'bottom'])
+    parser.add_argument('--word-value',
+                        default='all',
+                        choices=['all', 'top', 'bottom'])
     parser.add_argument('--window-size', type=int, default=200)
     group1 = parser.add_mutually_exclusive_group()
     group1.add_argument('--shuffle', action='store_true', default=False)
@@ -48,7 +50,7 @@ def parse_arguments():
 
     if not args.sid and args.electrodes:
         parser.error("--electrodes requires --sid")
-    
+
     raise Exception(args)
 
     return args

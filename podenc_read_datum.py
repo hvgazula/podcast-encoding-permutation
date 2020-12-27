@@ -43,10 +43,10 @@ def read_datum(args):
     # Drop stopwords
     df = df[~df['word'].isin(['sp', '{lg}', '{ns}', '{inaudible}'])]
 
-    # Find, combine and drop embedding columns 
+    # Find, combine and drop embedding columns
     df_cols = df.columns.to_list()
     embedding_columns = df_cols[df_cols.index('0'):]
-    
+
     df = df.dropna(subset=embedding_columns)
 
     df['embeddings'] = df[embedding_columns].values.tolist()
@@ -72,7 +72,5 @@ def read_datum(args):
         datum = df[pred <= m[np.ceil(len(m) / denom)], col_names]
     elif args.word_value == 'top':
         datum = df[pred >= m[len(m) - np.ceil(len(m) / denom)], col_names]
-    else:
-        raise Exception('Cannot recognize keyword')
 
     return datum
