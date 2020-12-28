@@ -23,9 +23,6 @@ def parse_arguments():
                         default='all',
                         choices=['all', 'top', 'bottom'])
     parser.add_argument('--window-size', type=int, default=200)
-    group1 = parser.add_mutually_exclusive_group()
-    group1.add_argument('--shuffle', action='store_true', default=False)
-    group1.add_argument('--phase-shuffle', action='store_true', default=False)
     parser.add_argument('--stim', type=str, default='Podcast')
     parser.add_argument('--pilot', type=str, default='')
     parser.add_argument('--lags', nargs='+', type=int)
@@ -45,6 +42,10 @@ def parse_arguments():
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--sid', nargs='?', type=int, default=None)
     group.add_argument('--sig-elec-file', nargs='?', type=str, default=None)
+
+    group1 = parser.add_mutually_exclusive_group()
+    group1.add_argument('--shuffle', action='store_true', default=False)
+    group1.add_argument('--phase-shuffle', action='store_true', default=False)
 
     args = parser.parse_args()
 
