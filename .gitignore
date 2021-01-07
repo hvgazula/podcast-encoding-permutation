@@ -4,3 +4,8 @@ __pycache__
 *NY*
 *.png
 *esults
+
+results/*
+data/*
+
+!.gitkeep
