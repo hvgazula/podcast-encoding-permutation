@@ -70,7 +70,7 @@ MWF := 1
 
 run-perm-cluster:
 	mkdir -p logs
-	$(CMD) podenc_$(FILE).py \
+	$(CMD) code/podenc_$(FILE).py \
 		--sid $(SID) \
 		--electrodes $(E_LIST) \
 		--datum-emb-fn $(DS) \
@@ -91,7 +91,7 @@ run-perm-cluster:
 # submit on the cluster (one job for each electrode)
 run-perm-array:
 	mkdir -p logs
-	$(CMD) podenc_$(FILE).py \
+	$(CMD) code/podenc_$(FILE).py \
 		--sid $(SID) \
 		--datum-emb-fn $(DS) \
 		--window-size $(WS) \
