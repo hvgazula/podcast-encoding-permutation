@@ -67,10 +67,7 @@ def setup_environ(args):
         PROJ_DIR = '/projects/HASSON/247/data/podcast'
         DATUM_DIR = PROJ_DIR
         CONV_DIR = PROJ_DIR
-        if args.sid in [661, 662, 717, 723]:
-            BRAIN_DIR_STR = 'preprocessed'
-        else:
-            BRAIN_DIR_STR = 'preprocessed-ica'
+        BRAIN_DIR_STR = 'preprocessed_all'
     else:
         tiger = 0
         PROJ_DIR = '/mnt/bucket/labs/hasson/ariel/247/'
@@ -86,7 +83,6 @@ def setup_environ(args):
                      tiger=tiger)
 
     vars(args).update(path_dict)
-    print(args)
 
     return args
 
@@ -115,9 +111,12 @@ def process_subjects(args, datum):
         select_files = all_files
     else:
         # if specified select corresponding files
+        args.electrodes = [
+            x for x in args.electrodes if 0 < x <= len(all_files)
+        ]
         select_files = [
-            file for file in all_files if any(
-                str(idx) in file for idx in args.electrodes)
+            file for file in all_files
+            if any('_' + str(idx) + '.mat' in file for idx in args.electrodes)
         ]
 
     # Loop over each electrode
