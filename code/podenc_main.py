@@ -5,11 +5,10 @@ import sys
 from datetime import datetime
 
 import pandas as pd
-from scipy.io import loadmat
-
 from podenc_read_datum import read_datum
 from podenc_utils import (create_output_directory, encoding_regression,
                           load_header)
+from scipy.io import loadmat
 
 
 def parse_arguments():

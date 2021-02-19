@@ -1,14 +1,14 @@
 import csv
 import os
-import sys
+from functools import partial
+from multiprocessing import Pool
 
 import mat73
 import numpy as np
 from numba import jit, prange
+from podenc_phase_shuffle import phase_randomize
 from scipy import stats
 from sklearn.model_selection import KFold
-
-from podenc_phase_shuffle import phase_randomize
 
 
 def encColCorr(CA, CB):
@@ -109,7 +109,7 @@ def cv_lm_003(X, Y, kfolds):
 @jit(nopython=True)
 def fit_model(X, y):
     """Calculate weight vector using normal form of regression.
-    
+
     Returns:
         [type]: (X'X)^-1 * (X'y)
     """
@@ -189,7 +189,7 @@ def encode_lags_numba(args, X, Y):
     """
     if args.shuffle:
         np.random.shuffle(Y)
-    
+
     if args.phase_shuffle:
         Y = phase_randomize(Y)
 
@@ -199,6 +199,11 @@ def encode_lags_numba(args, X, Y):
     rp, _, _ = encColCorr(Y, PY_hat)
 
     return rp
+
+
+def encoding_mp(_, args, prod_X, prod_Y):
+    perm_rc = encode_lags_numba(args, prod_X, prod_Y)
+    return perm_rc
 
 
 def run_save_permutation(args, prod_X, prod_Y, filename):
@@ -211,12 +216,13 @@ def run_save_permutation(args, prod_X, prod_Y, filename):
         filename ([type]): [description]
     """
     if prod_X.shape[0]:
-        perm_prod = []
-        for _ in range(args.npermutations):
-            perm_rc = encode_lags_numba(args, prod_X, prod_Y)
-            perm_prod.append(perm_rc)
+        with Pool() as pool:
+            perm_prod = pool.map(
+                partial(encoding_mp, args=args, prod_X=prod_X, prod_Y=prod_Y),
+                range(args.npermutations))
 
         perm_prod = np.stack(perm_prod)
+
         with open(filename, 'w') as csvfile:
             csvwriter = csv.writer(csvfile)
             csvwriter.writerows(perm_prod)
@@ -243,8 +249,8 @@ def load_header(conversation_dir, subject_id):
 
 
 def create_output_directory(args, sid):
-    folder_name = '-'.join([args.output_prefix, sid])
-    full_output_dir = os.path.join(os.getcwd(), 'Results', folder_name)
+    folder_name = '-'.join([args.output_prefix, str(args.sid)])
+    full_output_dir = os.path.join(os.getcwd(), 'results', folder_name)
     os.makedirs(full_output_dir, exist_ok=True)
     return full_output_dir
 
