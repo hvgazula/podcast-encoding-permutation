@@ -1,7 +1,7 @@
 CMD := echo
 CMD := sbatch submit.sh
 CMD := python
-# CMD := sbatch --array=1-50 submit.sh
+CMD := sbatch --array=1-115 submit.sh
 FILE := main
 
 # username
@@ -9,6 +9,24 @@ USR := $(shell whoami | head -c 2)
 
 # subject id
 SID := 661
+# SID := 662
+# SID := 717
+# SID := 723
+# SID := 741
+# SID := 742
+# SID := 763
+# SID := 798
+
+#\
+661 115 electrodes \
+661 96  electrodes \
+717 255 electrodes \
+723 165 electrodes \
+741 130 electrodes \
+742 175 electrodes \
+763 76  electrodes \
+798 195 electrodes \
+#\
 
 # Choose electrode susbset to use
 # fdr  From sig-elec-50d-FDR-allLags-allElec_updated.xlsx {1000..1158}
@@ -33,6 +51,8 @@ SID := 661
 # E_LIST=10 27 36 37 38 4 47 112 113 114 116 117 119 120 121 122 126 71 74 75 \
          78 79 80 86 87 88 158 174 175 176
 
+E_LIST=$(shell seq 1 1)
+
 # Choose which word column to use.
 # Options: word lemmatized_word stemmed_word
 WORD_COL = lemmatized_word
@@ -56,16 +76,21 @@ DS := podcast-datum-glove-50d.csv
 # SE := 5000-sig-elec-50d-onethresh-01.csv
 NW := nonWords
 WV := all
-NP := 2
+NP := 5
 LAGS := {-2000..2000..25}
-DT := $(shell date +"%Y%m%d")
+DT := $(shell date +"%Y%m%d-%H%M")
 WS := 200
 GPT2 := 0
 GLOVE := 0
 MWF := 1
 # SH := --shuffle
-# PSH := --phase-shuffle
+PSH := --phase-shuffle
 # PIL := mturk
+
+
+PDIR := $(shell dirname `pwd`)
+link-data:
+	ln -fs $(PDIR)/podcast-pickling/results/* data/
 
 
 run-perm-cluster:
@@ -85,7 +110,7 @@ run-perm-cluster:
 		--min-word-freq $(MWF) \
 		$(SH) \
 		$(PSH) \
-		--output-prefix $(DT)-$(USR)-$(WS)ms-$(WV)-$(PIL); \
+		--output-prefix $(DT)-$(USR)-$(WV)-$(PIL); \
 
 # Array jobs
 # submit on the cluster (one job for each electrode)
@@ -101,7 +126,8 @@ run-perm-array:
 		--gpt2 $(GPT2) \
 		--npermutations $(NP) \
 		--lags $(LAGS) \
-		--sig-elec-name $(SE) \
+		--sig-elec-file $(SE) \
 		--min-word-freq $(MWF) \
 		$(SH) \
-		--outName $(DT)-$(USR)-$(WS)ms; \
+		$(PSH) \
+		--output-prefix $(DT)-$(USR)-$(WV)-$(PIL); \
