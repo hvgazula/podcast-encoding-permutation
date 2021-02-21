@@ -1,7 +1,6 @@
 import argparse
 import glob
 import os
-import sys
 from datetime import datetime
 
 import pandas as pd
@@ -37,6 +36,7 @@ def parse_arguments():
     parser.add_argument('--electrodes', nargs='*', type=int)
     parser.add_argument('--npermutations', type=int, default=1)
     parser.add_argument('--min-word-freq', nargs='?', type=int, default=1)
+    parser.add_argument('--job-id', type=int, default=0)
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--sid', nargs='?', type=int, default=None)
