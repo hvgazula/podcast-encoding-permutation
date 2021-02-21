@@ -1,11 +1,17 @@
 import argparse
+import csv
 import glob
 import os
 from datetime import datetime
+from functools import partial
+from multiprocessing import Pool
 
+import numpy as np
 import pandas as pd
+from podenc_phase_shuffle import phase_randomize_1d
 from podenc_read_datum import read_datum
-from podenc_utils import (create_output_directory, encoding_regression,
+from podenc_utils import (append_jobid_to_string, create_output_directory,
+                          encoding_regression, encoding_regression_pr,
                           load_header)
 from scipy.io import loadmat
 
@@ -118,7 +124,21 @@ def process_subjects(args, datum):
             if any('_' + str(idx) + '.mat' in file for idx in args.electrodes)
         ]
 
-    # Loop over each electrode
+    return select_files, labels, sid
+
+
+def dumdum1(i, args, sid, datum, signal, name):
+    np.random.seed(i)
+    new_signal = phase_randomize_1d(signal)
+    (prod_corr, comp_corr) = encoding_regression_pr(args, sid, datum,
+                                                    new_signal, name)
+
+    return (prod_corr, comp_corr)
+
+
+def this_is_where_you_perform_regression(args, sid, select_files, labels,
+                                         datum):
+
     for file, electrode in zip(select_files, args.electrodes):
         name = labels[electrode - 1]  # python indexing
 
@@ -126,14 +146,42 @@ def process_subjects(args, datum):
             continue
         elec_signal = loadmat(file)['p1st']
 
-        # Perform encoding/regression
-        encoding_regression(args, sid, datum, elec_signal, name)
+        output_dir = create_output_directory(args)
 
+        # Perform encoding/regression
+        if args.phase_shuffle:
+            with Pool(16) as pool:
+                corr = pool.map(
+                    partial(dumdum1,
+                            args=args,
+                            sid=sid,
+                            datum=datum,
+                            signal=elec_signal,
+                            name=name), range(args.npermutations))
+
+            prod_corr, comp_corr = list(map(list, zip(*corr)))
+
+            if all(prod_corr):
+                trial_str = append_jobid_to_string(args, 'prod')
+                filename = os.path.join(output_dir, name + trial_str + '.csv')
+                with open(filename, 'w') as csvfile:
+                    csvwriter = csv.writer(csvfile)
+                    csvwriter.writerows(prod_corr)
+
+            trial_str = append_jobid_to_string(args, 'comp')
+            filename = os.path.join(output_dir, name + trial_str + '.csv')
+            with open(filename, 'w') as csvfile:
+                csvwriter = csv.writer(csvfile)
+                csvwriter.writerows(comp_corr)
+
+        else:
+            # Perform encoding/regression
+            encoding_regression(args, sid, datum, elec_signal, name)
     return
 
 
 def process_sig_electrodes(args, datum):
-    """Run encoding on select significant elctrodes specified by a file 
+    """Run encoding on select significant elctrodes specified by a file
     """
     flag = 'prediction_presentation' if not args.tiger else ''
 
@@ -187,7 +235,9 @@ if __name__ == "__main__":
     if args.sig_elec_file:
         process_sig_electrodes(args, datum)
     else:
-        process_subjects(args, datum)
+        select_files, labels, sid = process_subjects(args, datum)
+        this_is_where_you_perform_regression(args, sid, select_files, labels,
+                                             datum)
 
     end_time = datetime.now()
     print(f'End Time: {end_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
