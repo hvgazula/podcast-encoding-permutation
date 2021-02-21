@@ -10,6 +10,7 @@ from podenc_phase_shuffle import phase_randomize
 from scipy import stats
 from sklearn.model_selection import KFold
 
+jobid = os.getenv('SLURM_ARRAY_TASK_ID')
 
 def encColCorr(CA, CB):
     """[summary]
@@ -201,7 +202,8 @@ def encode_lags_numba(args, X, Y):
     return rp
 
 
-def encoding_mp(_, args, prod_X, prod_Y):
+def encoding_mp(i, args, prod_X, prod_Y):
+    np.random.seed(i)
     perm_rc = encode_lags_numba(args, prod_X, prod_Y)
     return perm_rc
 
@@ -216,7 +218,7 @@ def run_save_permutation(args, prod_X, prod_Y, filename):
         filename ([type]): [description]
     """
     if prod_X.shape[0]:
-        with Pool() as pool:
+        with Pool(16) as pool:
             perm_prod = pool.map(
                 partial(encoding_mp, args=args, prod_X=prod_X, prod_Y=prod_Y),
                 range(args.npermutations))
@@ -278,10 +280,23 @@ def encoding_regression(args, sid, datum, elec_signal, name):
     output_dir = create_output_directory(args, sid)
 
     # Run permutation and save results
-    filename = os.path.join(output_dir, name + '_prod.csv')
+    trial_str = append_jobid_to_string('prod')
+    filename = os.path.join(output_dir, name + trial_str + '.csv')
     run_save_permutation(args, prod_X, prod_Y, filename)
 
-    filename = os.path.join(output_dir, name + '_comp.csv')
+    trial_str = append_jobid_to_string('comp')
+    filename = os.path.join(output_dir, name + trial_str + '.csv')
     run_save_permutation(args, comp_X, comp_Y, filename)
 
     return
+
+
+def append_jobid_to_string(speech_str):
+    speech_str = '_' + speech_str
+
+    if not jobid:
+        trial_str = '_'.join([speech_str, f'{args.job_id:02d}']) 
+    else:
+        trial_str = speech_str
+
+    return trial_str
