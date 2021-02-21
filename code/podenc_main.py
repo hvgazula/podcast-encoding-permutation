@@ -105,7 +105,7 @@ def setup_environ(args):
     return args
 
 
-def process_subjects(args, datum):
+def process_subjects(args):
     """Run encoding on particular subject (requires specifying electrodes)
     """
     sid = 'NY' + str(args.sid) + '_111_Part1_conversation1'
@@ -137,20 +137,31 @@ def process_subjects(args, datum):
             if any('_' + str(idx) + '.mat' in file for idx in args.electrodes)
         ]
 
-    return select_files, labels, sid
+    return select_files, labels
 
 
-def dumdum1(i, args, sid, datum, signal, name):
-    np.random.seed(i)
+def dumdum1(iter_idx, args, datum, signal, name):
+    np.random.seed(iter_idx)
     new_signal = phase_randomize_1d(signal)
-    (prod_corr, comp_corr) = encoding_regression_pr(args, sid, datum,
-                                                    new_signal, name)
+    (prod_corr, comp_corr) = encoding_regression_pr(args, datum, new_signal,
+                                                    name)
 
     return (prod_corr, comp_corr)
 
 
-def this_is_where_you_perform_regression(args, sid, select_files, labels,
-                                         datum):
+def write_output(args, output_mat, name, output_dir, output_str):
+
+    output_dir = create_output_directory(args)
+
+    if all(output_mat):
+        trial_str = append_jobid_to_string(args, output_str)
+        filename = os.path.join(output_dir, name + trial_str + '.csv')
+        with open(filename, 'w') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            csvwriter.writerows(output_mat)
+
+
+def this_is_where_you_perform_regression(args, select_files, labels, datum):
 
     for file, electrode in zip(select_files, args.electrodes):
         name = labels[electrode - 1]  # python indexing
@@ -159,37 +170,22 @@ def this_is_where_you_perform_regression(args, sid, select_files, labels,
             continue
         elec_signal = loadmat(file)['p1st']
 
-        output_dir = create_output_directory(args)
-
         # Perform encoding/regression
         if args.phase_shuffle:
             with Pool(16) as pool:
                 corr = pool.map(
                     partial(dumdum1,
                             args=args,
-                            sid=sid,
                             datum=datum,
                             signal=elec_signal,
                             name=name), range(args.npermutations))
 
-            prod_corr, comp_corr = list(map(list, zip(*corr)))
+            prod_corr, comp_corr = map(list, zip(*corr))
 
-            if all(prod_corr):
-                trial_str = append_jobid_to_string(args, 'prod')
-                filename = os.path.join(output_dir, name + trial_str + '.csv')
-                with open(filename, 'w') as csvfile:
-                    csvwriter = csv.writer(csvfile)
-                    csvwriter.writerows(prod_corr)
-
-            trial_str = append_jobid_to_string(args, 'comp')
-            filename = os.path.join(output_dir, name + trial_str + '.csv')
-            with open(filename, 'w') as csvfile:
-                csvwriter = csv.writer(csvfile)
-                csvwriter.writerows(comp_corr)
-
+            write_output(args, comp_corr, name, 'prod')
+            write_output(args, comp_corr, name, 'comp')
         else:
-            # Perform encoding/regression
-            encoding_regression(args, sid, datum, elec_signal, name)
+            encoding_regression(args, datum, elec_signal, name)
     return
 
 
@@ -205,9 +201,8 @@ def main():
     datum = read_datum(args)
 
     # Processing significant electrodes or individual subjects
-    select_files, labels, sid = process_subjects(args, datum)
-    this_is_where_you_perform_regression(args, sid, select_files, labels,
-                                         datum)
+    select_files, labels = process_subjects(args)
+    this_is_where_you_perform_regression(args, select_files, labels, datum)
 
 
 if __name__ == "__main__":

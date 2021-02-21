@@ -292,7 +292,7 @@ def create_output_directory(args):
     return full_output_dir
 
 
-def encoding_regression_pr(args, sid, datum, elec_signal, name):
+def encoding_regression_pr(args, datum, elec_signal, name):
     """[summary]
 
     Args:
@@ -319,7 +319,7 @@ def encoding_regression_pr(args, sid, datum, elec_signal, name):
     return (prod_corr, comp_corr)
 
 
-def encoding_regression(args, sid, datum, elec_signal, name):
+def encoding_regression(args, datum, elec_signal, name):
     """[summary]
 
     Args:
@@ -339,7 +339,7 @@ def encoding_regression(args, sid, datum, elec_signal, name):
     prod_Y = Y[datum.speaker == 'Speaker1', :]
     comp_Y = Y[datum.speaker != 'Speaker1', :]
 
-    print(f'{sid} {name} Prod: {len(prod_X)} Comp: {len(comp_X)}')
+    print(f'{args.sid} {name} Prod: {len(prod_X)} Comp: {len(comp_X)}')
 
     output_dir = create_output_directory(args)
 
