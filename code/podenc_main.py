@@ -7,7 +7,6 @@ from functools import partial
 from multiprocessing import Pool
 
 import numpy as np
-import pandas as pd
 from podenc_phase_shuffle import phase_randomize_1d
 from podenc_read_datum import read_datum
 from podenc_utils import (append_jobid_to_string, create_output_directory,
@@ -180,44 +179,6 @@ def this_is_where_you_perform_regression(args, sid, select_files, labels,
     return
 
 
-def process_sig_electrodes(args, datum):
-    """Run encoding on select significant elctrodes specified by a file
-    """
-    flag = 'prediction_presentation' if not args.tiger else ''
-
-    # Read in the significant electrodes
-    sig_elec_file = os.path.join(args.PROJ_DIR, flag, args.sig_elec_file)
-    sig_elec_list = pd.read_csv(sig_elec_file, header=None)[0].tolist()
-
-    # Loop over each electrode
-    for sig_elec in sig_elec_list:
-        subject_id, elec_name = sig_elec[:29], sig_elec[30:]
-
-        # Read subject's header
-        labels = load_header(args.CONV_DIR, subject_id)
-        if not labels:
-            print('Header Missing')
-        electrode_num = labels.index(elec_name)
-
-        # Read electrode data
-        brain_dir = os.path.join(args.CONV_DIR, subject_id, args.BRAIN_DIR_STR)
-        electrode_file = os.path.join(
-            brain_dir, ''.join([
-                subject_id, '_electrode_preprocess_file_',
-                str(electrode_num + 1), '.mat'
-            ]))
-        try:
-            elec_signal = loadmat(electrode_file)['p1st']
-        except FileNotFoundError:
-            print(f'Missing: {electrode_file}')
-            continue
-
-        # Perform encoding/regression
-        encoding_regression(args, subject_id, datum, elec_signal, elec_name)
-
-    return
-
-
 if __name__ == "__main__":
     start_time = datetime.now()
     print(f'Start Time: {start_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
@@ -232,12 +193,9 @@ if __name__ == "__main__":
     datum = read_datum(args)
 
     # Processing significant electrodes or individual subjects
-    if args.sig_elec_file:
-        process_sig_electrodes(args, datum)
-    else:
-        select_files, labels, sid = process_subjects(args, datum)
-        this_is_where_you_perform_regression(args, sid, select_files, labels,
-                                             datum)
+    select_files, labels, sid = process_subjects(args, datum)
+    this_is_where_you_perform_regression(args, sid, select_files, labels,
+                                         datum)
 
     end_time = datetime.now()
     print(f'End Time: {end_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
