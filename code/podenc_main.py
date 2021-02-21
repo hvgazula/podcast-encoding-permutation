@@ -15,6 +15,20 @@ from podenc_utils import (append_jobid_to_string, create_output_directory,
 from scipy.io import loadmat
 
 
+def main_timer(func):
+    def function_wrapper():
+        start_time = datetime.now()
+        print(f'Start Time: {start_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
+
+        func()
+
+        end_time = datetime.now()
+        print(f'End Time: {end_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
+        print(f'Total runtime: {end_time - start_time} (HH:MM:SS)')
+
+    return function_wrapper
+
+
 def parse_arguments():
     """Read commandline arguments
 
@@ -179,10 +193,8 @@ def this_is_where_you_perform_regression(args, sid, select_files, labels,
     return
 
 
-if __name__ == "__main__":
-    start_time = datetime.now()
-    print(f'Start Time: {start_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
-
+@main_timer
+def main():
     # Read command line arguments
     args = parse_arguments()
 
@@ -197,7 +209,6 @@ if __name__ == "__main__":
     this_is_where_you_perform_regression(args, sid, select_files, labels,
                                          datum)
 
-    end_time = datetime.now()
-    print(f'End Time: {end_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
 
-    print(f'Total runtime: {end_time - start_time} (HH:MM:SS)')
+if __name__ == "__main__":
+    main()
