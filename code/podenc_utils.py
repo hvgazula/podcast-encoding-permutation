@@ -358,7 +358,7 @@ def encoding_regression(args, datum, elec_signal, name):
 def append_jobid_to_string(args, speech_str):
     speech_str = '_' + speech_str
 
-    if not args.job_id:
+    if args.job_id:
         trial_str = '_'.join([speech_str, f'{args.job_id:02d}'])
     else:
         trial_str = speech_str
