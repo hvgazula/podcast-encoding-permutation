@@ -10,7 +10,6 @@ from podenc_phase_shuffle import phase_randomize
 from scipy import stats
 from sklearn.model_selection import KFold
 
-jobid = os.getenv('SLURM_ARRAY_TASK_ID')
 
 def encColCorr(CA, CB):
     """[summary]
@@ -202,9 +201,47 @@ def encode_lags_numba(args, X, Y):
     return rp
 
 
+def encode_lags_numba_pr(args, X, Y):
+    """[summary]
+
+    Args:
+        X ([type]): [description]
+        Y ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
+    if args.shuffle:
+        np.random.shuffle(Y)
+
+    Y = np.mean(Y, axis=-1)
+
+    PY_hat = cv_lm_003(X, Y, 10)
+    rp, _, _ = encColCorr(Y, PY_hat)
+
+    return rp
+
+
 def encoding_mp(i, args, prod_X, prod_Y):
     np.random.seed(i)
     perm_rc = encode_lags_numba(args, prod_X, prod_Y)
+    return perm_rc
+
+
+def run_save_permutation_pr(args, prod_X, prod_Y, filename):
+    """[summary]
+
+    Args:
+        args ([type]): [description]
+        prod_X ([type]): [description]
+        prod_Y ([type]): [description]
+        filename ([type]): [description]
+    """
+    if prod_X.shape[0]:
+        perm_rc = encode_lags_numba(args, prod_X, prod_Y)
+    else:
+        perm_rc = None
+
     return perm_rc
 
 
@@ -248,14 +285,14 @@ def load_header(conversation_dir, subject_id):
     return labels
 
 
-def create_output_directory(args, sid):
+def create_output_directory(args):
     folder_name = '-'.join([args.output_prefix, str(args.sid)])
     full_output_dir = os.path.join(os.getcwd(), 'results', folder_name)
     os.makedirs(full_output_dir, exist_ok=True)
     return full_output_dir
 
 
-def encoding_regression(args, sid, datum, elec_signal, name):
+def encoding_regression_pr(args, datum, elec_signal, name):
     """[summary]
 
     Args:
@@ -275,27 +312,54 @@ def encoding_regression(args, sid, datum, elec_signal, name):
     prod_Y = Y[datum.speaker == 'Speaker1', :]
     comp_Y = Y[datum.speaker != 'Speaker1', :]
 
-    print(f'{sid} {name} Prod: {len(prod_X)} Comp: {len(comp_X)}')
+    # Run permutation and save results
+    prod_corr = run_save_permutation_pr(args, prod_X, prod_Y, None)
+    comp_corr = run_save_permutation_pr(args, comp_X, comp_Y, None)
 
-    output_dir = create_output_directory(args, sid)
+    return (prod_corr, comp_corr)
+
+
+def encoding_regression(args, datum, elec_signal, name):
+    """[summary]
+
+    Args:
+        args (Namespace): Command-line inputs and other configuration
+        sid (str): Subject ID
+        datum (DataFrame): ['word', 'onset', 'offset', 'speaker', 'accuracy']
+        elec_signal (numpy.ndarray): of shape (num_samples, 1)
+        name (str): electrode name
+    """
+    # Build design matrices
+    X, Y = build_XY(args, datum, elec_signal)
+
+    # Split into production and comprehension
+    prod_X = X[datum.speaker == 'Speaker1', :]
+    comp_X = X[datum.speaker != 'Speaker1', :]
+
+    prod_Y = Y[datum.speaker == 'Speaker1', :]
+    comp_Y = Y[datum.speaker != 'Speaker1', :]
+
+    print(f'{args.sid} {name} Prod: {len(prod_X)} Comp: {len(comp_X)}')
+
+    output_dir = create_output_directory(args)
 
     # Run permutation and save results
-    trial_str = append_jobid_to_string('prod')
+    trial_str = append_jobid_to_string(args, 'prod')
     filename = os.path.join(output_dir, name + trial_str + '.csv')
     run_save_permutation(args, prod_X, prod_Y, filename)
 
-    trial_str = append_jobid_to_string('comp')
+    trial_str = append_jobid_to_string(args, 'comp')
     filename = os.path.join(output_dir, name + trial_str + '.csv')
     run_save_permutation(args, comp_X, comp_Y, filename)
 
     return
 
 
-def append_jobid_to_string(speech_str):
+def append_jobid_to_string(args, speech_str):
     speech_str = '_' + speech_str
 
-    if not jobid:
-        trial_str = '_'.join([speech_str, f'{args.job_id:02d}']) 
+    if not args.job_id:
+        trial_str = '_'.join([speech_str, f'{args.job_id:02d}'])
     else:
         trial_str = speech_str
 

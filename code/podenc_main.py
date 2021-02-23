@@ -1,13 +1,32 @@
 import argparse
+import csv
 import glob
 import os
 from datetime import datetime
+from functools import partial
+from multiprocessing import Pool
 
-import pandas as pd
+import numpy as np
+from podenc_phase_shuffle import phase_randomize_1d
 from podenc_read_datum import read_datum
-from podenc_utils import (create_output_directory, encoding_regression,
+from podenc_utils import (append_jobid_to_string, create_output_directory,
+                          encoding_regression, encoding_regression_pr,
                           load_header)
 from scipy.io import loadmat
+
+
+def main_timer(func):
+    def function_wrapper():
+        start_time = datetime.now()
+        print(f'Start Time: {start_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
+
+        func()
+
+        end_time = datetime.now()
+        print(f'End Time: {end_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
+        print(f'Total runtime: {end_time - start_time} (HH:MM:SS)')
+
+    return function_wrapper
 
 
 def parse_arguments():
@@ -86,7 +105,7 @@ def setup_environ(args):
     return args
 
 
-def process_subjects(args, datum):
+def process_subjects(args):
     """Run encoding on particular subject (requires specifying electrodes)
     """
     sid = 'NY' + str(args.sid) + '_111_Part1_conversation1'
@@ -118,7 +137,32 @@ def process_subjects(args, datum):
             if any('_' + str(idx) + '.mat' in file for idx in args.electrodes)
         ]
 
-    # Loop over each electrode
+    return select_files, labels
+
+
+def dumdum1(iter_idx, args, datum, signal, name):
+    np.random.seed(iter_idx)
+    new_signal = phase_randomize_1d(signal)
+    (prod_corr, comp_corr) = encoding_regression_pr(args, datum, new_signal,
+                                                    name)
+
+    return (prod_corr, comp_corr)
+
+
+def write_output(args, output_mat, name, output_dir, output_str):
+
+    output_dir = create_output_directory(args)
+
+    if all(output_mat):
+        trial_str = append_jobid_to_string(args, output_str)
+        filename = os.path.join(output_dir, name + trial_str + '.csv')
+        with open(filename, 'w') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            csvwriter.writerows(output_mat)
+
+
+def this_is_where_you_perform_regression(args, select_files, labels, datum):
+
     for file, electrode in zip(select_files, args.electrodes):
         name = labels[electrode - 1]  # python indexing
 
@@ -127,53 +171,26 @@ def process_subjects(args, datum):
         elec_signal = loadmat(file)['p1st']
 
         # Perform encoding/regression
-        encoding_regression(args, sid, datum, elec_signal, name)
+        if args.phase_shuffle:
+            with Pool(16) as pool:
+                corr = pool.map(
+                    partial(dumdum1,
+                            args=args,
+                            datum=datum,
+                            signal=elec_signal,
+                            name=name), range(args.npermutations))
 
+            prod_corr, comp_corr = map(list, zip(*corr))
+
+            write_output(args, comp_corr, name, 'prod')
+            write_output(args, comp_corr, name, 'comp')
+        else:
+            encoding_regression(args, datum, elec_signal, name)
     return
 
 
-def process_sig_electrodes(args, datum):
-    """Run encoding on select significant elctrodes specified by a file 
-    """
-    flag = 'prediction_presentation' if not args.tiger else ''
-
-    # Read in the significant electrodes
-    sig_elec_file = os.path.join(args.PROJ_DIR, flag, args.sig_elec_file)
-    sig_elec_list = pd.read_csv(sig_elec_file, header=None)[0].tolist()
-
-    # Loop over each electrode
-    for sig_elec in sig_elec_list:
-        subject_id, elec_name = sig_elec[:29], sig_elec[30:]
-
-        # Read subject's header
-        labels = load_header(args.CONV_DIR, subject_id)
-        if not labels:
-            print('Header Missing')
-        electrode_num = labels.index(elec_name)
-
-        # Read electrode data
-        brain_dir = os.path.join(args.CONV_DIR, subject_id, args.BRAIN_DIR_STR)
-        electrode_file = os.path.join(
-            brain_dir, ''.join([
-                subject_id, '_electrode_preprocess_file_',
-                str(electrode_num + 1), '.mat'
-            ]))
-        try:
-            elec_signal = loadmat(electrode_file)['p1st']
-        except FileNotFoundError:
-            print(f'Missing: {electrode_file}')
-            continue
-
-        # Perform encoding/regression
-        encoding_regression(args, subject_id, datum, elec_signal, elec_name)
-
-    return
-
-
-if __name__ == "__main__":
-    start_time = datetime.now()
-    print(f'Start Time: {start_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
-
+@main_timer
+def main():
     # Read command line arguments
     args = parse_arguments()
 
@@ -184,12 +201,9 @@ if __name__ == "__main__":
     datum = read_datum(args)
 
     # Processing significant electrodes or individual subjects
-    if args.sig_elec_file:
-        process_sig_electrodes(args, datum)
-    else:
-        process_subjects(args, datum)
+    select_files, labels = process_subjects(args)
+    this_is_where_you_perform_regression(args, select_files, labels, datum)
 
-    end_time = datetime.now()
-    print(f'End Time: {end_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
 
-    print(f'Total runtime: {end_time - start_time} (HH:MM:SS)')
+if __name__ == "__main__":
+    main()

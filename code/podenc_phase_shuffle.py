@@ -47,7 +47,8 @@ def phase_randomize(data):
         pos_freq = np.arange(1, (n_samples - 1) // 2 + 1)
         neg_freq = np.arange(n_samples - 1, (n_samples - 1) // 2, -1)
 
-    phase_shifts = np.random.rand(n_examples, n_lags, len(pos_freq)) * 2 * np.math.pi
+    phase_shifts = np.random.rand(n_examples, n_lags,
+                                  len(pos_freq)) * 2 * np.math.pi
 
     # Fast Fourier transform along time dimension of data
     fft_data = np.fft.fft(data, axis=-1)
@@ -95,6 +96,9 @@ def phase_randomize_1d(data):
     # Inverse FFT to put data back in time domain
     shifted_data = np.real(ifft(fft_data, axis=0))
 
+    # Make it a contiguous array (for numba compatibility])
+    shifted_data = np.ascontiguousarray(shifted_data)
+
     return shifted_data
 
 
@@ -107,7 +111,7 @@ if __name__ == '__main__':
         np.random.seed(i)
         output_vec0 = phase_shuffle(input_vec)
         print(sum(sum(output_vec0)))
-    
+
     print("============================")
     input_vec = np.arange(1, 101).reshape(-1, 1)
     print(f'input vec sum: {sum(sum(input_vec))}')
@@ -115,7 +119,7 @@ if __name__ == '__main__':
         np.random.seed(i)
         output_vec1 = phase_randomize_1d(input_vec)
         print(sum(sum(output_vec1)))
-   
+
     print("============================")
     input_vec = np.arange(1, 101).reshape(1, 1, -1)
     print(f'input vec sum: {sum(sum(sum((input_vec))))}')
