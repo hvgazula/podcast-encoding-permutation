@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --time=1:30:00
+#SBATCH --time=3:30:00
 #SBATCH --mem=96GB
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=8
 #SBATCH -o './logs/%A.out'
 #SBATCH -e './logs/%A.err'
 

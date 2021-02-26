@@ -1,6 +1,6 @@
 CMD := echo
 CMD := sbatch submit.sh
-CMD := python
+# CMD := python
 # CMD := sbatch --array=1-5 submit.sh
 FILE := main
 
@@ -10,14 +10,14 @@ USR := $(shell whoami | head -c 2)
 # subject id
 SID := 661
 ELIST :=  $(shell seq 1 115)
-# SID := 662
-# ELIST :=  $(shell seq 1 96)
-# SID := 717
-# ELIST :=  $(shell seq 1 255)
-# SID := 723
-# ELIST :=  $(shell seq 1 165)
-# SID := 741
-# ELIST :=  $(shell seq 1 130)
+SID := 662
+ELIST :=  $(shell seq 1 96)
+SID := 717
+ELIST :=  $(shell seq 1 255)
+SID := 723
+ELIST :=  $(shell seq 1 165)
+SID := 741
+ELIST :=  $(shell seq 1 130)
 # SID := 742
 # ELIST :=  $(shell seq 1 175)
 # SID := 763
@@ -25,31 +25,6 @@ ELIST :=  $(shell seq 1 115)
 # SID := 798
 # ELIST :=  $(shell seq 1 195)
 
-
-# Choose electrode susbset to use
-# fdr  From sig-elec-50d-FDR-allLags-allElec_updated.xlsx {1000..1158}
-# fdr  From FDR on max distribution: static {2000..2078}
-# fdr4 From FDR on max distribution: contextual (BERT) {3000..3156}
-# 14 - sig-elec-50d-pred-allElec-allLags - {200..213}
-# 22 - sig-elec-50d-pred - {300..321}
-# 79 - sig-elec-50d-FDR-allLags-allElec-onethresh-updated - {700..778}
-# 44 - sig-elec-bert-glove-diff-FDR.csv (fdr5) - {4000..4043}
-# E = $(words $(E_LIST))
-# FDR across lags; FDR across elctrodes at max correlation (fdr2)
-# E_LIST := $(shell seq 100 183)
-# E_LIST := $(shell seq 400 485) # electest2-intersect
-# E_LIST := $(shell seq 500 577) # GLoVe 5000 (0.001 sig)
-# E_LIST := $(shell seq 950 987) # GLoVe 5000: -1000 to -100ms (0.05 sig)
-# E_LIST := $(shell seq 2500 2560) # bert bert50d-glove50d-diff-sig-elec-01-116-abs
-# E_LIST := $(shell seq 2600 2673) # gpt2-glove-50d-previous-diff-sig-elec-01-116
-# E_LIST := $(shell seq 800 915) # 116 - GLoVe 5000 (0.01 sig)
-# E_LIST := $(shell seq 160 170)
-
-# 116 - 717
-# E_LIST=10 27 36 37 38 4 47 112 113 114 116 117 119 120 121 122 126 71 74 75 \
-         78 79 80 86 87 88 158 174 175 176
-
-ELIST=$(shell seq 1 1)
 
 # Choose which word column to use.
 # Options: word lemmatized_word stemmed_word
@@ -74,7 +49,7 @@ DS := podcast-datum-glove-50d.csv
 # SE := 5000-sig-elec-50d-onethresh-01.csv
 NW := nonWords
 WV := all
-NP := 3
+NP := 1000
 LAGS := {-2000..2000..25}
 DT := $(shell date +"%Y%m%d")
 WS := 200
@@ -94,7 +69,7 @@ link-data:
 run-perm-cluster:
 	mkdir -p logs
 	for elec in $(ELIST); do \
-		for jobid in $(shell seq 1 10); do \
+		# for jobid in $(shell seq 1 1); do \
 			$(CMD) code/podenc_$(FILE).py \
 				--sid $(SID) \
 				--electrodes $$elec \
@@ -111,8 +86,8 @@ run-perm-cluster:
 				$(SH) \
 				$(PSH) \
 				--output-prefix $(DT)-$(USR)-$(WV)-$(PIL) \
-				--job-id $$jobid; \
-		done; \
+				# --job-id $$jobid; \
+		# done; \
 	done;
 
 # Array jobs

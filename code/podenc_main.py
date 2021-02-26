@@ -149,7 +149,7 @@ def dumdum1(iter_idx, args, datum, signal, name):
     return (prod_corr, comp_corr)
 
 
-def write_output(args, output_mat, name, output_dir, output_str):
+def write_output(args, output_mat, name, output_str):
 
     output_dir = create_output_directory(args)
 
@@ -172,7 +172,7 @@ def this_is_where_you_perform_regression(args, select_files, labels, datum):
 
         # Perform encoding/regression
         if args.phase_shuffle:
-            with Pool(16) as pool:
+            with Pool(8) as pool:
                 corr = pool.map(
                     partial(dumdum1,
                             args=args,
@@ -182,7 +182,7 @@ def this_is_where_you_perform_regression(args, select_files, labels, datum):
 
             prod_corr, comp_corr = map(list, zip(*corr))
 
-            write_output(args, comp_corr, name, 'prod')
+            write_output(args, prod_corr, name, 'prod')
             write_output(args, comp_corr, name, 'comp')
         else:
             encoding_regression(args, datum, elec_signal, name)
