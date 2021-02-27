@@ -18,13 +18,12 @@ SID := 723
 ELIST :=  $(shell seq 1 165)
 SID := 741
 ELIST :=  $(shell seq 1 130)
-# SID := 742
-# ELIST :=  $(shell seq 1 175)
+SID := 742
+ELIST :=  $(shell seq 1 175)
 # SID := 763
 # ELIST :=  $(shell seq 1 76)
 # SID := 798
 # ELIST :=  $(shell seq 1 195)
-
 
 # Choose which word column to use.
 # Options: word lemmatized_word stemmed_word

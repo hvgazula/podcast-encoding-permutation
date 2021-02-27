@@ -80,7 +80,7 @@ def setup_environ(args):
     """Update args with project specific directories and other flags
     """
     hostname = os.environ['HOSTNAME']
-    if 'tiger' in hostname:
+    if any([item in hostname for item in ['tiger', 'della']]):
         tiger = 1
         PROJ_DIR = '/projects/HASSON/247/data/podcast'
         DATUM_DIR = PROJ_DIR
@@ -172,7 +172,7 @@ def this_is_where_you_perform_regression(args, select_files, labels, datum):
 
         # Perform encoding/regression
         if args.phase_shuffle:
-            with Pool(8) as pool:
+            with Pool(16) as pool:
                 corr = pool.map(
                     partial(dumdum1,
                             args=args,
