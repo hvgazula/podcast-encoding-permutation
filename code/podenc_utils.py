@@ -287,7 +287,9 @@ def load_header(conversation_dir, subject_id):
 
 def create_output_directory(args):
     folder_name = '-'.join([args.output_prefix, str(args.sid)])
-    full_output_dir = os.path.join(os.getcwd(), 'results', folder_name)
+    folder_name = folder_name.strip('-')
+    full_output_dir = os.path.join(os.getcwd(), 'results',
+                                   args.output_parent_dir, folder_name)
     os.makedirs(full_output_dir, exist_ok=True)
     return full_output_dir
 

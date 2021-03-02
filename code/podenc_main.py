@@ -43,7 +43,7 @@ def parse_arguments():
     parser.add_argument('--stim', type=str, default='Podcast')
     parser.add_argument('--pilot', type=str, default='')
     parser.add_argument('--lags', nargs='+', type=int)
-    parser.add_argument('--output-prefix', type=str, default='test')
+    parser.add_argument('--output-prefix', type=str, default='')
     parser.add_argument('--nonWords', action='store_true', default=False)
     parser.add_argument('--datum-emb-fn',
                         type=str,
@@ -56,6 +56,7 @@ def parse_arguments():
     parser.add_argument('--npermutations', type=int, default=1)
     parser.add_argument('--min-word-freq', nargs='?', type=int, default=1)
     parser.add_argument('--job-id', type=int, default=0)
+    parser.add_argument('--output-parent-dir', type=str, default='test')
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--sid', nargs='?', type=int, default=None)
@@ -136,7 +137,6 @@ def process_subjects(args):
             flag = 0
             for file in all_files:
                 if '_' + str(elec) + '.mat' in file:
-                    print(file)
                     select_files.append(file)
                     flag = 1
             if not flag:

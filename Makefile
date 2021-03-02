@@ -51,7 +51,7 @@ DS := podcast-datum-glove-50d.csv
 NW := nonWords
 WV := all
 NP := 1
-LAGS := {-2000..2000..1000}
+LAGS := {-2000..2000..25}
 DT := $(shell date +"%Y%m%d")
 WS := 200
 GPT2 := 0
@@ -60,8 +60,6 @@ MWF := 1
 # SH := --shuffle
 # PSH := --phase-shuffle
 # PIL := mturk
-
-ELIST := 
 
 PDIR := $(shell dirname `pwd`)
 link-data:
@@ -85,7 +83,8 @@ simple-encoding:
 		--min-word-freq $(MWF) \
 		$(SH) \
 		$(PSH) \
-		--output-prefix test; \
+		--output-parent-dir no-shuffle \
+		--output-prefix '';\
 
 
 encoding-perm-cluster:
