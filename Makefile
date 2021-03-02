@@ -10,18 +10,18 @@ USR := $(shell whoami | head -c 2)
 # subject id
 SID := 661
 ELIST :=  $(shell seq 1 115)
-SID := 662
-ELIST :=  $(shell seq 1 96)
-SID := 717
-ELIST :=  $(shell seq 1 255)
-SID := 723
-ELIST :=  $(shell seq 1 165)
-SID := 741
-ELIST :=  $(shell seq 1 130)
-SID := 742
-ELIST :=  $(shell seq 1 175)
-SID := 743
-ELIST :=  $(shell seq 1 125)
+# SID := 662
+# ELIST :=  $(shell seq 1 96)
+# SID := 717
+# ELIST :=  $(shell seq 1 255)
+# SID := 723
+# ELIST :=  $(shell seq 1 165)
+# SID := 741
+# ELIST :=  $(shell seq 1 130)
+# SID := 742
+# ELIST :=  $(shell seq 1 175)
+# SID := 743
+# ELIST :=  $(shell seq 1 125)
 # SID := 763
 # ELIST :=  $(shell seq 1 76)
 # SID := 798
@@ -58,7 +58,7 @@ GPT2 := 0
 GLOVE := 0
 MWF := 1
 # SH := --shuffle
-PSH := --phase-shuffle
+# PSH := --phase-shuffle
 # PIL := mturk
 
 
@@ -67,13 +67,33 @@ link-data:
 	ln -fs $(PDIR)/podcast-pickling/results/* data/
 
 
-run-perm-cluster:
+simple-encoding:
+	mkdir -p logs
+	$(CMD) code/podenc_$(FILE).py \
+		--sid $(SID) \
+		--electrodes $(ELIST) \
+		--datum-emb-fn $(DS) \
+		--window-size $(WS) \
+		--word-value $(WV) \
+		--$(NW) \
+		--glove $(GLOVE) \
+		--gpt2 $(GPT2) \
+		--npermutations $(NP) \
+		--lags $(LAGS) \
+		--sig-elec-file $(SE) \
+		--min-word-freq $(MWF) \
+		$(SH) \
+		$(PSH) \
+		--output-prefix $(USR); \
+
+
+encoding-perm-cluster:
 	mkdir -p logs
 	for elec in $(ELIST); do \
-		# for jobid in $(shell seq 1 1); do \
+		for jobid in $(shell seq 1 1); do 
 			$(CMD) code/podenc_$(FILE).py \
 				--sid $(SID) \
-				--electrodes $$elec \
+				--electrodes $(ELIST) \
 				--datum-emb-fn $(DS) \
 				--window-size $(WS) \
 				--word-value $(WV) \
@@ -86,9 +106,9 @@ run-perm-cluster:
 				--min-word-freq $(MWF) \
 				$(SH) \
 				$(PSH) \
-				--output-prefix $(DT)-$(USR)-$(WV)-$(PIL) \
+				--output-prefix $(USR) \
 				# --job-id $$jobid; \
-		# done; \
+		done; \
 	done;
 
 # Array jobs
