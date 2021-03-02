@@ -129,13 +129,18 @@ def process_subjects(args):
         select_files = all_files
     else:
         # if specified select corresponding files
-        args.electrodes = [
-            x for x in args.electrodes if 0 < x <= len(all_files)
-        ]
-        select_files = [
-            file for file in all_files
-            if any('_' + str(idx) + '.mat' in file for idx in args.electrodes)
-        ]
+        elecs = [i for i in args.electrodes]
+
+        select_files = []
+        for elec in elecs:
+            flag = 0
+            for file in all_files:
+                if '_' + str(elec) + '.mat' in file:
+                    print(file)
+                    select_files.append(file)
+                    flag = 1
+            if not flag:
+                args.electrodes.remove(elec)
 
     return select_files, labels
 
@@ -166,8 +171,9 @@ def this_is_where_you_perform_regression(args, select_files, labels, datum):
     for file, electrode in zip(select_files, args.electrodes):
         name = labels[electrode - 1]  # python indexing
 
-        if 'EKG' in name:
+        if any([item in name for item in ['EKG', 'ECG', 'SG']]):
             continue
+
         elec_signal = loadmat(file)['p1st']
 
         # Perform encoding/regression
@@ -202,6 +208,8 @@ def main():
 
     # Processing significant electrodes or individual subjects
     select_files, labels = process_subjects(args)
+
+    # raise Exception()
     this_is_where_you_perform_regression(args, select_files, labels, datum)
 
 

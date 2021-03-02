@@ -1,6 +1,6 @@
 CMD := echo
 CMD := sbatch submit.sh
-# CMD := python
+CMD := python
 # CMD := sbatch --array=1-5 submit.sh
 FILE := main
 
@@ -10,22 +10,22 @@ USR := $(shell whoami | head -c 2)
 # subject id
 SID := 661
 ELIST :=  $(shell seq 1 115)
-# SID := 662
-# ELIST :=  $(shell seq 1 96)
-# SID := 717
-# ELIST :=  $(shell seq 1 255)
-# SID := 723
-# ELIST :=  $(shell seq 1 165)
-# SID := 741
-# ELIST :=  $(shell seq 1 130)
-# SID := 742
-# ELIST :=  $(shell seq 1 175)
-# SID := 743
-# ELIST :=  $(shell seq 1 125)
-# SID := 763
-# ELIST :=  $(shell seq 1 76)
-# SID := 798
-# ELIST :=  $(shell seq 1 195)
+SID := 662
+ELIST :=  $(shell seq 1 100)
+SID := 717
+ELIST :=  $(shell seq 1 255)
+SID := 723
+ELIST :=  $(shell seq 1 165)
+SID := 741
+ELIST :=  $(shell seq 1 130)
+SID := 742
+ELIST :=  $(shell seq 1 175)
+SID := 743
+ELIST :=  $(shell seq 1 125)
+SID := 763
+ELIST :=  $(shell seq 1 80)
+SID := 798
+ELIST :=  $(shell seq 1 195)
 
 # Choose which word column to use.
 # Options: word lemmatized_word stemmed_word
@@ -50,8 +50,8 @@ DS := podcast-datum-glove-50d.csv
 # SE := 5000-sig-elec-50d-onethresh-01.csv
 NW := nonWords
 WV := all
-NP := 1000
-LAGS := {-2000..2000..25}
+NP := 1
+LAGS := {-2000..2000..1000}
 DT := $(shell date +"%Y%m%d")
 WS := 200
 GPT2 := 0
@@ -61,6 +61,7 @@ MWF := 1
 # PSH := --phase-shuffle
 # PIL := mturk
 
+ELIST := 
 
 PDIR := $(shell dirname `pwd`)
 link-data:
@@ -84,7 +85,7 @@ simple-encoding:
 		--min-word-freq $(MWF) \
 		$(SH) \
 		$(PSH) \
-		--output-prefix $(USR); \
+		--output-prefix test; \
 
 
 encoding-perm-cluster:
