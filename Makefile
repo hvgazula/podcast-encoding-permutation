@@ -1,6 +1,6 @@
 CMD := echo
 CMD := sbatch submit.sh
-CMD := python
+# CMD := python
 # CMD := sbatch --array=1-5 submit.sh
 FILE := main
 
@@ -16,16 +16,16 @@ SID := 717
 ELIST :=  $(shell seq 1 255)
 SID := 723
 ELIST :=  $(shell seq 1 165)
-SID := 741
-ELIST :=  $(shell seq 1 130)
-SID := 742
-ELIST :=  $(shell seq 1 175)
-SID := 743
-ELIST :=  $(shell seq 1 125)
-SID := 763
-ELIST :=  $(shell seq 1 80)
-SID := 798
-ELIST :=  $(shell seq 1 195)
+# SID := 741
+# ELIST :=  $(shell seq 1 130)
+# SID := 742
+# ELIST :=  $(shell seq 1 175)
+# SID := 743
+# ELIST :=  $(shell seq 1 125)
+# SID := 763
+# ELIST :=  $(shell seq 1 80)
+# SID := 798
+# ELIST :=  $(shell seq 1 195)
 
 # Choose which word column to use.
 # Options: word lemmatized_word stemmed_word
@@ -50,7 +50,7 @@ DS := podcast-datum-glove-50d.csv
 # SE := 5000-sig-elec-50d-onethresh-01.csv
 NW := nonWords
 WV := all
-NP := 1
+NP := 1000
 LAGS := {-2000..2000..25}
 DT := $(shell date +"%Y%m%d")
 WS := 200
@@ -90,10 +90,10 @@ simple-encoding:
 encoding-perm-cluster:
 	mkdir -p logs
 	for elec in $(ELIST); do \
-		for jobid in $(shell seq 1 1); do 
+		# for jobid in $(shell seq 1 1); do \
 			$(CMD) code/podenc_$(FILE).py \
 				--sid $(SID) \
-				--electrodes $(ELIST) \
+				--electrodes $$elec \
 				--datum-emb-fn $(DS) \
 				--window-size $(WS) \
 				--word-value $(WV) \
@@ -106,9 +106,10 @@ encoding-perm-cluster:
 				--min-word-freq $(MWF) \
 				$(SH) \
 				$(PSH) \
-				--output-prefix $(USR) \
+				--output-parent-dir phase-shuffle \
+				--output-prefix '' \
 				# --job-id $$jobid; \
-		done; \
+		# done; \
 	done;
 
 # Array jobs
