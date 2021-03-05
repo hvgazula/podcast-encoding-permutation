@@ -60,10 +60,15 @@ if __name__ == "__main__":
             some_list.append((subject_key, elecname1, s))
 
 df = pd.DataFrame(some_list, columns=['subject', 'electrode', 'score'])
-print(df.head())
 _, pcor, _, _ = multitest.multipletests(df.score.values,
                                         method='fdr_bh',
                                         is_sorted=False)
 
-print(pcor)
-print(len(pcor))
+thresh = 0.01
+flag = np.logical_or(np.isclose(pcor, thresh), pcor < thresh)
+
+df = df[flag]
+df['electrode'] = df['electrode'].str.strip('_comp')
+df.to_csv('significant_electrodes',
+          index=False,
+          columns=['subject', 'electrode'])

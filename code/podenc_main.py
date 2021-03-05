@@ -7,12 +7,13 @@ from functools import partial
 from multiprocessing import Pool
 
 import numpy as np
+from scipy.io import loadmat
+
 from podenc_phase_shuffle import phase_randomize_1d
 from podenc_read_datum import read_datum
 from podenc_utils import (append_jobid_to_string, create_output_directory,
                           encoding_regression, encoding_regression_pr,
                           load_header)
-from scipy.io import loadmat
 
 
 def main_timer(func):

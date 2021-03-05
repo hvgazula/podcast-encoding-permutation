@@ -6,9 +6,10 @@ from multiprocessing import Pool
 import mat73
 import numpy as np
 from numba import jit, prange
-from podenc_phase_shuffle import phase_randomize
 from scipy import stats
 from sklearn.model_selection import KFold
+
+from podenc_phase_shuffle import phase_randomize
 
 
 def encColCorr(CA, CB):
