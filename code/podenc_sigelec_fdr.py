@@ -1,23 +1,42 @@
 import glob
 import os
+import pickle
 
 import numpy as np
 import pandas as pd
 from statsmodels.stats import multitest
 
+
+def load_pickle(pickle_name):
+    """Load the datum pickle and returns as a dataframe
+    Args:
+        file (string): labels pickle from 247-decoding/tfs_pickling.py
+    Returns:
+        DataFrame: pickle contents returned as dataframe
+    """
+    with open(pickle_name, 'rb') as fh:
+        datum = pickle.load(fh)
+
+    return datum
+
+
 if __name__ == "__main__":
+    brain_side = 'LH'
+
     subjects = sorted(
         glob.glob(
             '/scratch/gpfs/hgazula/podcast-encoding/results/no-shuffle/*'))
 
+    hemisphere_indicator = load_pickle(
+        '/scratch/gpfs/hgazula/podcast_hemisphere_indicator.pkl')
+
     lags = np.arange(-2000, 2001, 25)
-    names = []
-    pVals = []
 
     pval_dict = dict()
     some_list = []
     for subject in subjects:
         subject_key = os.path.basename(subject)
+
         shuffle_elec_file_list = sorted(
             glob.glob(
                 os.path.join(
@@ -29,6 +48,22 @@ if __name__ == "__main__":
                 os.path.join(
                     '/scratch/gpfs/hgazula/podcast-encoding/results/no-shuffle',
                     os.path.basename(subject), '*.csv')))
+
+        curr_key = hemisphere_indicator.get(int(subject_key), None)
+
+        if not curr_key:
+            pass
+        elif len(curr_key) == 2:
+            shuffle_elec_file_list = list(
+                filter(lambda x: os.path.basename(x).startswith(('L', 'DL')),
+                       shuffle_elec_file_list))
+            main_elec_file_list = list(
+                filter(lambda x: os.path.basename(x).startswith(('L', 'DL')),
+                       main_elec_file_list))
+        elif len(curr_key) == 1 and 'RH' in curr_key:
+            continue
+        else:
+            pass
 
         a = [os.path.basename(item) for item in shuffle_elec_file_list]
         b = [os.path.basename(item) for item in main_elec_file_list]
@@ -65,10 +100,10 @@ _, pcor, _, _ = multitest.multipletests(df.score.values,
                                         is_sorted=False)
 
 thresh = 0.01
-flag = np.logical_or(np.isclose(pcor, thresh), pcor < thresh)
+flag = np.logical_or(np.isclose(pcor, thresh, atol=1e-6), pcor < thresh)
 
 df = df[flag]
 df['electrode'] = df['electrode'].str.strip('_comp')
-df.to_csv('significant_electrodes',
+df.to_csv('phase-1000-sig-elec-glove50d-perElec-FDR-01-LH-hg.csv',
           index=False,
           columns=['subject', 'electrode'])
