@@ -1,24 +1,10 @@
 import glob
 import os
-import pickle
 
 import numpy as np
 import pandas as pd
 from statsmodels.stats import multitest
-
-
-def load_pickle(pickle_name):
-    """Load the datum pickle and returns as a dataframe
-    Args:
-        file (string): labels pickle from 247-decoding/tfs_pickling.py
-    Returns:
-        DataFrame: pickle contents returned as dataframe
-    """
-    with open(pickle_name, 'rb') as fh:
-        datum = pickle.load(fh)
-
-    return datum
-
+from utils import load_pickle
 
 if __name__ == "__main__":
     brain_side = 'LH'
@@ -94,16 +80,16 @@ if __name__ == "__main__":
             s = 1 - (sum(np.max(rc_result) > omaxs) / perm_result.shape[0])
             some_list.append((subject_key, elecname1, s))
 
-df = pd.DataFrame(some_list, columns=['subject', 'electrode', 'score'])
-_, pcor, _, _ = multitest.multipletests(df.score.values,
-                                        method='fdr_bh',
-                                        is_sorted=False)
+    df = pd.DataFrame(some_list, columns=['subject', 'electrode', 'score'])
+    _, pcor, _, _ = multitest.multipletests(df.score.values,
+                                            method='fdr_bh',
+                                            is_sorted=False)
 
-thresh = 0.01
-flag = np.logical_or(np.isclose(pcor, thresh, atol=1e-6), pcor < thresh)
+    thresh = 0.01
+    flag = np.logical_or(np.isclose(pcor, thresh, atol=1e-6), pcor < thresh)
 
-df = df[flag]
-df['electrode'] = df['electrode'].str.strip('_comp')
-df.to_csv('phase-1000-sig-elec-glove50d-perElec-FDR-01-LH-hg.csv',
-          index=False,
-          columns=['subject', 'electrode'])
+    df = df[flag]
+    df['electrode'] = df['electrode'].str.strip('_comp')
+    df.to_csv('phase-1000-sig-elec-glove50d-perElec-FDR-01-LH-hg.csv',
+              index=False,
+              columns=['subject', 'electrode'])
