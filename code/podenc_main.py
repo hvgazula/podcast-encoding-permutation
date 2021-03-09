@@ -1,80 +1,19 @@
-import argparse
 import csv
 import glob
 import os
-from datetime import datetime
 from functools import partial
 from multiprocessing import Pool
 
 import numpy as np
+import pandas as pd
+from podenc_parser import parse_arguments
 from podenc_phase_shuffle import phase_randomize_1d
 from podenc_read_datum import read_datum
 from podenc_utils import (append_jobid_to_string, create_output_directory,
                           encoding_regression, encoding_regression_pr,
                           load_header)
 from scipy.io import loadmat
-
-
-def main_timer(func):
-    def function_wrapper():
-        start_time = datetime.now()
-        print(f'Start Time: {start_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
-
-        func()
-
-        end_time = datetime.now()
-        print(f'End Time: {end_time.strftime("%A %m/%d/%Y %H:%M:%S")}')
-        print(f'Total runtime: {end_time - start_time} (HH:MM:SS)')
-
-    return function_wrapper
-
-
-def parse_arguments():
-    """Read commandline arguments
-
-    Returns:
-        Namespace: input as well as default arguments
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--word-value',
-                        default='all',
-                        choices=['all', 'top', 'bottom'])
-    parser.add_argument('--window-size', type=int, default=200)
-    parser.add_argument('--stim', type=str, default='Podcast')
-    parser.add_argument('--pilot', type=str, default='')
-    parser.add_argument('--lags', nargs='+', type=int)
-    parser.add_argument('--output-prefix', type=str, default='')
-    parser.add_argument('--nonWords', action='store_true', default=False)
-    parser.add_argument('--datum-emb-fn',
-                        type=str,
-                        default='podcast-datum-glove-50d.csv')
-    parser.add_argument('--gpt2', type=int, default=1)
-    parser.add_argument('--bert', type=int, default=None)
-    parser.add_argument('--bart', type=int, default=None)
-    parser.add_argument('--glove', type=int, default=1)
-    parser.add_argument('--electrodes', nargs='*', type=int)
-    parser.add_argument('--npermutations', type=int, default=1)
-    parser.add_argument('--min-word-freq', nargs='?', type=int, default=1)
-    parser.add_argument('--job-id', type=int, default=0)
-    parser.add_argument('--output-parent-dir', type=str, default='test')
-
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('--sid', nargs='?', type=int, default=None)
-    group.add_argument('--sig-elec-file', nargs='?', type=str, default=None)
-
-    group1 = parser.add_mutually_exclusive_group()
-    group1.add_argument('--shuffle', action='store_true', default=False)
-    group1.add_argument('--phase-shuffle', action='store_true', default=False)
-
-    args = parser.parse_args()
-
-    if not args.sid and args.electrodes:
-        parser.error("--electrodes requires --sid")
-
-    if not args.shuffle and not args.phase_shuffle:
-        args.npermutations = 1
-
-    return args
+from utils import main_timer, write_config
 
 
 def setup_environ(args):
@@ -195,6 +134,48 @@ def this_is_where_you_perform_regression(args, select_files, labels, datum):
     return
 
 
+def process_sig_electrodes(args, datum):
+    """Run encoding on select significant elctrodes specified by a file
+    """
+    # Read in the significant electrodes
+    sig_elec_file = os.path.join(
+        os.path.join(os.getcwd(), 'code', args.sig_elec_file))
+    sig_elec_list = pd.read_csv(sig_elec_file)
+
+    # Loop over each electrode
+    for subject, elec_name in sig_elec_list.itertuples(index=False):
+
+        if isinstance(subject, int):
+            subject_id = glob.glob(
+                os.path.join(args.CONV_DIR, 'NY' + str(subject) + '*'))[0]
+            subject_id = os.path.basename(subject_id)
+
+        # Read subject's header
+        labels = load_header(args.CONV_DIR, subject_id)
+        if not labels:
+            print('Header Missing')
+        electrode_num = labels.index(elec_name)
+
+        # Read electrode data
+        brain_dir = os.path.join(args.CONV_DIR, subject_id, args.BRAIN_DIR_STR)
+        electrode_file = os.path.join(
+            brain_dir, ''.join([
+                subject_id, '_electrode_preprocess_file_',
+                str(electrode_num + 1), '.mat'
+            ]))
+        try:
+            elec_signal = loadmat(electrode_file)['p1st']
+        except FileNotFoundError:
+            print(f'Missing: {electrode_file}')
+            continue
+
+        # Perform encoding/regression
+        encoding_regression(args, datum, elec_signal,
+                            str(subject) + '_' + elec_name)
+
+    return
+
+
 @main_timer
 def main():
     # Read command line arguments
@@ -203,14 +184,18 @@ def main():
     # Setup paths to data
     args = setup_environ(args)
 
+    # Saving configuration to output directory
+    write_config(vars(args))
+
     # Locate and read datum
     datum = read_datum(args)
 
     # Processing significant electrodes or individual subjects
-    select_files, labels = process_subjects(args)
-
-    # raise Exception()
-    this_is_where_you_perform_regression(args, select_files, labels, datum)
+    if args.sig_elec_file:
+        process_sig_electrodes(args, datum)
+    else:
+        select_files, labels = process_subjects(args)
+        this_is_where_you_perform_regression(args, select_files, labels, datum)
 
 
 if __name__ == "__main__":
