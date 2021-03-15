@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --time=1:30:00
+#SBATCH --time=0:10:00
 #SBATCH --mem=96GB
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=16
@@ -9,8 +9,9 @@
 if [[ "$HOSTNAME" == *"tiger"* ]]
 then
     echo "It's tiger"
-    module load anaconda
-    source activate torch-env
+    module load anaconda3
+    conda activate contxt-events
+    #source activate torch-env
 elif [[ "$HOSTNAME" == *"della"* ]]
 then
     echo "It's Della"

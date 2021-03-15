@@ -8,24 +8,24 @@ FILE := main
 USR := $(shell whoami | head -c 2)
 
 # subject id
-SID := 661
-ELIST :=  $(shell seq 1 115)
-SID := 662
-ELIST :=  $(shell seq 1 100)
+#SID := 661
+#ELIST :=  $(shell seq 1 115)
+#SID := 662
+#ELIST :=  $(shell seq 1 96)
 SID := 717
-ELIST :=  $(shell seq 1 255)
+ELIST :=  $(shell seq 1 252)
 SID := 723
-ELIST :=  $(shell seq 1 165)
-# SID := 741
-# ELIST :=  $(shell seq 1 130)
-# SID := 742
-# ELIST :=  $(shell seq 1 175)
-# SID := 743
-# ELIST :=  $(shell seq 1 125)
-# SID := 763
-# ELIST :=  $(shell seq 1 80)
-# SID := 798
-# ELIST :=  $(shell seq 1 195)
+ELIST :=  $(shell seq 1 156)
+SID := 741
+ELIST :=  $(shell seq 1 128)
+SID := 742
+ELIST :=  $(shell seq 1 172)
+SID := 743
+ELIST :=  $(shell seq 1 122)
+SID := 763
+ELIST :=  $(shell seq 1 75)
+SID := 798
+ELIST :=  $(shell seq 1 192)
 
 # Choose which word column to use.
 # Options: word lemmatized_word stemmed_word
@@ -40,21 +40,22 @@ ED = none
 # predictability column
 PRED_COL := bart_target_prob
 PRED_COL := gpt2_xl_target_prob
-PRED_COL := human_target_prob
+#PRED_COL := human_target_prob
 PD = $(shell echo ${PRED_COL} | head -c 4)
 
 # datum
-DS := podcast-datum-glove-50d.csv
-# DS := podcast-datum-gpt2-xl-c_1024-previous-pca_50d.csv
+#DS := podcast-datum-glove-50d.csv
+DS := podcast-datum-gpt2-xl-c_1024-previous-pca_50d.csv
 
 # SE := 5000-sig-elec-50d-onethresh-01.csv
 NW := nonWords
 WV := all
 NP := 1000
-LAGS := {-2000..2000..25}
+#LAGS := {-2000..2000..25}
+LAGS := {350..350..0}
 DT := $(shell date +"%Y%m%d")
-WS := 200
-GPT2 := 0
+WS := 300
+GPT2 := 1
 GLOVE := 0
 MWF := 1
 # SH := --shuffle
@@ -65,10 +66,9 @@ PDIR := $(shell dirname `pwd`)
 link-data:
 	ln -fs $(PDIR)/podcast-pickling/results/* data/
 
-
-simple-encoding:
+extract-signal:
 	mkdir -p logs
-	$(CMD) code/podenc_$(FILE).py \
+	$(CMD) code/pod_extract_signal.py \
 		--sid $(SID) \
 		--electrodes $(ELIST) \
 		--datum-emb-fn $(DS) \
@@ -83,7 +83,27 @@ simple-encoding:
 		--min-word-freq $(MWF) \
 		$(SH) \
 		$(PSH) \
-		--output-parent-dir no-shuffle \
+		--output-parent-dir highgamma \
+		--output-prefix 'semantic';\
+
+simple-encoding:
+	mkdir -p logs
+	$(CMD) code/pod_extract_signal.py \
+		--sid $(SID) \
+		--electrodes $(ELIST) \
+		--datum-emb-fn $(DS) \
+		--window-size $(WS) \
+		--word-value $(WV) \
+		--$(NW) \
+		--glove $(GLOVE) \
+		--gpt2 $(GPT2) \
+		--npermutations $(NP) \
+		--lags $(LAGS) \
+		--sig-elec-file $(SE) \
+		--min-word-freq $(MWF) \
+		$(SH) \
+		$(PSH) \
+		--output-parent-dir semantic \
 		--output-prefix '';\
 
 
