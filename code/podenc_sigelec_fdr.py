@@ -81,15 +81,26 @@ if __name__ == "__main__":
             some_list.append((subject_key, elecname1, s))
 
     df = pd.DataFrame(some_list, columns=['subject', 'electrode', 'score'])
+    thresh = 0.01
+    
+    df1 = df.copy(deep=True)
+    flag = np.logical_or(np.isclose(df1.score.values, thresh, atol=1e-6), df1.score.values > thresh)
+    
+    df1 = df1[flag]
+    df1['electrode'] = df1['electrode'].str.strip('_comp')
+    df1.to_csv('pre_fdr.csv',
+              index=False,
+              columns=['subject', 'electrode'])
+
     _, pcor, _, _ = multitest.multipletests(df.score.values,
                                             method='fdr_bh',
                                             is_sorted=False)
 
-    thresh = 0.01
-    flag = np.logical_or(np.isclose(pcor, thresh, atol=1e-6), pcor < thresh)
+    flag = np.logical_or(np.isclose(pcor, thresh), pcor < thresh)
 
     df = df[flag]
     df['electrode'] = df['electrode'].str.strip('_comp')
-    df.to_csv('phase-1000-sig-elec-glove50d-perElec-FDR-01-LH-hg.csv',
+    df.to_csv('post_fdr.csv',
               index=False,
               columns=['subject', 'electrode'])
+# phase-1000-sig-elec-glove50d-perElec-FDR-01-LH-hg
