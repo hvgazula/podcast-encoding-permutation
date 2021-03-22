@@ -169,9 +169,23 @@ def process_sig_electrodes(args, datum):
             print(f'Missing: {electrode_file}')
             continue
 
-        # Perform encoding/regression
-        encoding_regression(args, datum, elec_signal,
-                            str(subject) + '_' + elec_name)
+        if args.phase_shuffle:
+            with Pool(16) as pool:
+                corr = pool.map(
+                    partial(dumdum1,
+                            args=args,
+                            datum=datum,
+                            signal=elec_signal,
+                            name=elec_name), range(args.npermutations))
+
+            prod_corr, comp_corr = map(list, zip(*corr))
+
+            write_output(args, prod_corr, elec_name, 'prod')
+            write_output(args, comp_corr, elec_name, 'comp')
+        else:
+            # Perform encoding/regression
+            encoding_regression(args, datum, elec_signal,
+                                str(subject) + '_' + elec_name)
 
     return
 
