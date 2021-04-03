@@ -85,7 +85,10 @@ def process_subjects(args):
 
 
 def dumdum1(iter_idx, args, datum, signal, name):
-    np.random.seed(iter_idx)
+
+    seed = iter_idx + int(os.getenv("SLURM_ARRAY_TASK_ID", 0)) * 10000
+    np.random.seed(seed)
+
     new_signal = phase_randomize_1d(signal)
     (prod_corr, comp_corr) = encoding_regression_pr(args, datum, new_signal,
                                                     name)
@@ -114,6 +117,7 @@ def this_is_where_you_perform_regression(args, select_files, labels, datum):
             continue
 
         elec_signal = loadmat(file)['p1st']
+        elec_signal = elec_signal.reshape(-1, 1)
 
         # Perform encoding/regression
         if args.phase_shuffle:
@@ -165,6 +169,7 @@ def process_sig_electrodes(args, datum):
             ]))
         try:
             elec_signal = loadmat(electrode_file)['p1st']
+            elec_signal = elec_signal.reshape(-1, 1)
         except FileNotFoundError:
             print(f'Missing: {electrode_file}')
             continue
