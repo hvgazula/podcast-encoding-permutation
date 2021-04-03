@@ -1,4 +1,5 @@
 import argparse
+import os
 
 
 def parse_arguments():
@@ -48,5 +49,8 @@ def parse_arguments():
 
     if args.sig_elec_file:
         args.sid = 777
+
+    if os.getenv("SLURM_ARRAY_TASK_ID", None):
+        args.output_parent_dir += str(os.getenv("SLURM_ARRAY_TASK_ID"))
 
     return args
