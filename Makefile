@@ -1,7 +1,5 @@
-CMD := echo
 CMD := sbatch submit.sh
-# CMD := python
-# CMD := sbatch --array=1-5 submit.sh
+# {echo | python | sbatch submit.sh | sbatch --array=1-5 submit.sh}
 FILE := main
 
 # username
@@ -16,16 +14,16 @@ SID := 717
 ELIST :=  $(shell seq 1 255)
 SID := 723
 ELIST :=  $(shell seq 1 165)
-# SID := 741
-# ELIST :=  $(shell seq 1 130)
-# SID := 742
-# ELIST :=  $(shell seq 1 175)
-# SID := 743
-# ELIST :=  $(shell seq 1 125)
-# SID := 763
-# ELIST :=  $(shell seq 1 80)
-# SID := 798
-# ELIST :=  $(shell seq 1 195)
+SID := 741
+ELIST :=  $(shell seq 1 130)
+SID := 742
+ELIST :=  $(shell seq 1 175)
+SID := 743
+ELIST :=  $(shell seq 1 125)
+SID := 763
+ELIST :=  $(shell seq 1 80)
+SID := 798
+ELIST :=  $(shell seq 1 195)
 
 # Choose which word column to use.
 # Options: word lemmatized_word stemmed_word
@@ -39,8 +37,7 @@ ED = none
 
 # predictability column
 PRED_COL := bart_target_prob
-PRED_COL := gpt2_xl_target_prob
-PRED_COL := human_target_prob
+# {bart_target_prob | gpt2_xl_target_prob | human_target_prob}
 PD = $(shell echo ${PRED_COL} | head -c 4)
 
 # datum
@@ -54,11 +51,11 @@ NP := 1000
 LAGS := {-2000..2000..25}
 DT := $(shell date +"%Y%m%d")
 WS := 200
-GPT2 := 0
-GLOVE := 0
+GPT2 := 1
+GLOVE := 1
 MWF := 1
 # SH := --shuffle
-# PSH := --phase-shuffle
+PSH := --phase-shuffle
 # PIL := mturk
 
 PDIR := $(shell dirname `pwd`)
