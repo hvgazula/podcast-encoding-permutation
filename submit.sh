@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --time=1:30:00
-#SBATCH --mem=96GB
+#SBATCH --time=4:00:00
+#SBATCH --mem=128GB
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=16
 #SBATCH -o './logs/%A.out'

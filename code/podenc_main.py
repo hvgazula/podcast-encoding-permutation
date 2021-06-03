@@ -87,6 +87,8 @@ def process_subjects(args):
 def dumdum1(iter_idx, args, datum, signal, name):
 
     seed = iter_idx + int(os.getenv("SLURM_ARRAY_TASK_ID", 0)) * 10000
+    # seed = (1 + iter_idx) * int(np.random.randint(0, sys.maxsize) // 1e13)
+    # seed = (1 + iter_idx) + 50000
     np.random.seed(seed)
 
     new_signal = phase_randomize_1d(signal)

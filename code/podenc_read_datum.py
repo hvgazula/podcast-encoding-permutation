@@ -22,6 +22,16 @@ def read_datum(args):
     # Load datum file
     df = pd.read_csv(os.path.join(args.DATUM_DIR, args.datum_emb_fn), header=0)
 
+    if args.replication:
+        fold_pickle = 'fold' + str(args.fold_idx) + '.pickle'
+        df = pd.read_pickle(
+            os.path.join(
+                os.getcwd(), 'data', 'podcast',
+                '6059e10f2219d67149d59979b0bd636523af3e47ce1104d1716766ed1655fa72',
+                fold_pickle))
+        df = pd.DataFrame(df)
+        df = df[df.dataset.isin(['train', 'dev'])]
+
     # Filter/Align across language models
     if args.nonWords:
         df = df[df.is_nonword == 0]
@@ -43,14 +53,18 @@ def read_datum(args):
     # Drop stopwords
     df = df[~df['word'].isin(['sp', '{lg}', '{ns}', '{inaudible}'])]
 
-    # Find, combine and drop embedding columns
-    df_cols = df.columns.to_list()
-    embedding_columns = df_cols[df_cols.index('0'):]
+    if args.replication:
+        df['embeddings'] = df.embedding
+        df = df.dropna(subset=['embeddings'])
+    else:
+        # Find, combine and drop embedding columns
+        df_cols = df.columns.to_list()
+        embedding_columns = df_cols[df_cols.index('0'):]
 
-    df = df.dropna(subset=embedding_columns)
+        df = df.dropna(subset=embedding_columns)
 
-    df['embeddings'] = df[embedding_columns].values.tolist()
-    df = df.drop(columns=embedding_columns)
+        df['embeddings'] = df[embedding_columns].values.tolist()
+        df = df.drop(columns=embedding_columns)
 
     col_names = [
         'word', 'onset', 'offset', 'accuracy', 'speaker', 'embeddings'

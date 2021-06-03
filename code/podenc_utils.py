@@ -58,10 +58,7 @@ def cv_lm_003(X, Y, kfolds):
 
     # Data size
     nSamps = X.shape[0]
-    try:
-        nChans = Y.shape[1]
-    except E:
-        nChans = 1
+    nChans = Y.shape[1] if Y.shape[1:] else 1
 
     # Extract only test folds
     folds = [t[1] for t in skf.split(np.arange(nSamps))]
@@ -95,7 +92,7 @@ def cv_lm_003(X, Y, kfolds):
         Ytes -= np.mean(Ytes, axis=0)
 
         # Fit model
-        B = fit_model(Xtra, Ytra)
+        B = np.linalg.pinv(Xtra) @ Ytra
 
         # Predict
         foldYhat = Xtes @ B
@@ -288,8 +285,13 @@ def load_header(conversation_dir, subject_id):
 def create_output_directory(args):
     folder_name = '-'.join([args.output_prefix, str(args.sid)])
     folder_name = folder_name.strip('-')
-    full_output_dir = os.path.join(os.getcwd(), 'results',
-                                   args.output_parent_dir, folder_name)
+    if not args.replication:
+        full_output_dir = os.path.join(os.getcwd(), 'results',
+                                       args.output_parent_dir, folder_name)
+    else:
+        full_output_dir = os.path.join(os.getcwd(), 'results',
+                                       args.output_parent_dir, folder_name,
+                                       'fold' + str(args.fold_idx))
     os.makedirs(full_output_dir, exist_ok=True)
     return full_output_dir
 

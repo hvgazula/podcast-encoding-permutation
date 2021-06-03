@@ -3,6 +3,7 @@
 __pycache__
 *NY*
 *.png
+.vscode/
 
 results/**
 data/*

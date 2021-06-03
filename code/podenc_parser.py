@@ -39,6 +39,9 @@ def parse_arguments():
     group1.add_argument('--shuffle', action='store_true', default=False)
     group1.add_argument('--phase-shuffle', action='store_true', default=False)
 
+    parser.add_argument('--replication', action='store_true', default=False)
+    parser.add_argument('--fold-idx', type=int, default=None)
+
     args = parser.parse_args()
 
     if not args.sid and args.electrodes:
