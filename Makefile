@@ -1,4 +1,4 @@
-CMD := sbatch submit.sh
+CMD := python
 # {echo | python | sbatch submit.sh | sbatch --array=1-5 submit.sh}
 FILE := main
 
@@ -41,22 +41,23 @@ PRED_COL := bart_target_prob
 PD = $(shell echo ${PRED_COL} | head -c 4)
 
 # datum
-DS := podcast-datum-glove-50d.csv
-# DS := podcast-datum-gpt2-xl-c_1024-previous-pca_50d.csv
+# DS := podcast-datum-glove-50d.csv
+DS := podcast-datum-gpt2-xl-c_1024-previous-pca_50d.csv
 
 # SE := 5000-sig-elec-50d-onethresh-01.csv
+SE := bobbi_new.csv
 FOLD_IDX := $(shell seq 0 4)
 REP := --replication
 NW := nonWords
 WV := all
-NP := 1000
+NP := 1
 LAGS := {-2000..2000..25}
 DT := $(shell date +"%Y%m%d")
 WS := 200
 GPT2 := 1
 GLOVE := 1
 MWF := 1
-SH := --shuffle
+# SH := --shuffle
 # PSH := --phase-shuffle
 # PIL := mturk
 
@@ -83,6 +84,24 @@ simple-encoding:
 		$(SH) \
 		$(PSH) \
 		--output-parent-dir no-shuffle \
+		--output-prefix '';\
+
+simple-encoding-sig:
+	mkdir -p logs
+	$(CMD) code/podenc_$(FILE).py \
+		--datum-emb-fn $(DS) \
+		--window-size $(WS) \
+		--word-value $(WV) \
+		--$(NW) \
+		--glove $(GLOVE) \
+		--gpt2 $(GPT2) \
+		--npermutations $(NP) \
+		--lags $(LAGS) \
+		--sig-elec-file $(SE) \
+		--min-word-freq $(MWF) \
+		$(SH) \
+		$(PSH) \
+		--output-parent-dir 20210618-sig-elec-gpt2xl \
 		--output-prefix '';\
 
 
