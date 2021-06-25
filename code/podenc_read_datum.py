@@ -37,7 +37,7 @@ def read_datum(args):
             jar_id = 'e79d21ce6d643f45eb2f600bd41e8e84dd863c2146e1f7f0dcf331668d4ffc16'
         elif args.jar_name == 'glove':
             jar_id = '0fe95aa0dfd5dd3c67dadcaf57e687c49eb63e84b05851953b9e951120cdba20'
-        elif args.jar_name == 'gpt2':
+        elif args.jar_name == 'gpt2-xl':
             jar_id = '50908f5605ffcf5dfe6b0a9455797c3006a6d0f79333bd37ca4bd240b72cc491'
         else:
             print('Invalid jar id')

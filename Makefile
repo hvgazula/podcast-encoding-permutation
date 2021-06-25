@@ -1,4 +1,4 @@
-CMD := python
+CMD := echo
 # {echo | python | sbatch submit.sh | sbatch --array=1-5 submit.sh}
 FILE := main
 
@@ -7,22 +7,21 @@ USR := $(shell whoami | head -c 2)
 
 # subject id
 SID := 661
-ELIST :=  $(shell seq 1 1)
-# ELIST :=  $(shell seq 1 115)
-# SID := 662
-# ELIST :=  $(shell seq 1 100)
-# SID := 717
-# ELIST :=  $(shell seq 1 255)
-# SID := 723
-# ELIST :=  $(shell seq 1 165)
-# SID := 741
-# ELIST :=  $(shell seq 1 130)
-# SID := 742
-# ELIST :=  $(shell seq 1 175)
-# SID := 743
-# ELIST :=  $(shell seq 1 125)
-# SID := 763
-# ELIST :=  $(shell seq 1 80)
+ELIST :=  $(shell seq 1 115)
+SID := 662
+ELIST :=  $(shell seq 1 100)
+SID := 717
+ELIST :=  $(shell seq 1 255)
+SID := 723
+ELIST :=  $(shell seq 1 165)
+SID := 741
+ELIST :=  $(shell seq 1 130)
+SID := 742
+ELIST :=  $(shell seq 1 175)
+SID := 743
+ELIST :=  $(shell seq 1 125)
+SID := 763
+ELIST :=  $(shell seq 1 80)
 # SID := 798
 # ELIST :=  $(shell seq 1 195)
 
@@ -51,7 +50,7 @@ FOLD_IDX := $(shell seq 0 0)
 REP := --replication
 NW := nonWords
 WV := all
-NP := 1
+NP := 1000
 LAGS := {-2000..2000..25}
 DT := $(shell date +"%Y%m%d")
 WS := 200
@@ -62,7 +61,7 @@ MWF := 1
 PSH := --phase-shuffle
 # PIL := mturk
 JAR_NAME := arbitrary
-# {arbitrary | glove | gpt2}
+# {arbitrary | glove | gpt2-xl}
 PRJCT_ID := podcast
 
 PDIR := $(shell dirname `pwd`)
