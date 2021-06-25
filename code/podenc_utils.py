@@ -187,9 +187,6 @@ def encode_lags_numba(args, X, Y):
     if args.shuffle:
         np.random.shuffle(Y)
 
-    if args.phase_shuffle:
-        Y = phase_randomize(Y)
-
     Y = np.mean(Y, axis=-1)
 
     PY_hat = cv_lm_003(X, Y, 10)

@@ -22,13 +22,30 @@ def read_datum(args):
     # Load datum file
     df = pd.read_csv(os.path.join(args.DATUM_DIR, args.datum_emb_fn), header=0)
 
+    # if args.replication:
+    #     fold_pickle = 'fold' + str(args.fold_idx) + '.pickle'
+    #     df = pd.read_pickle(
+    #         os.path.join(
+    #             os.getcwd(), 'data', 'podcast',
+    #             '6059e10f2219d67149d59979b0bd636523af3e47ce1104d1716766ed1655fa72',
+    #             fold_pickle))
+    #     df = pd.DataFrame(df)
+    #     df = df[df.dataset.isin(['train', 'dev'])]
+
     if args.replication:
-        fold_pickle = 'fold' + str(args.fold_idx) + '.pickle'
+        if args.jar_name == 'arbitrary':
+            jar_id = 'e79d21ce6d643f45eb2f600bd41e8e84dd863c2146e1f7f0dcf331668d4ffc16'
+        elif args.jar_name == 'glove':
+            jar_id = '0fe95aa0dfd5dd3c67dadcaf57e687c49eb63e84b05851953b9e951120cdba20'
+        elif args.jar_name == 'gpt2':
+            jar_id = '50908f5605ffcf5dfe6b0a9455797c3006a6d0f79333bd37ca4bd240b72cc491'
+        else:
+            print('Invalid jar id')
+            raise Exception()
+
+        fold_pickle = 'fold' + str(0) + '.pickle'
         df = pd.read_pickle(
-            os.path.join(
-                os.getcwd(), 'data', 'podcast',
-                '6059e10f2219d67149d59979b0bd636523af3e47ce1104d1716766ed1655fa72',
-                fold_pickle))
+            os.path.join(os.getcwd(), 'data', 'podcast', jar_id, fold_pickle))
         df = pd.DataFrame(df)
         df = df[df.dataset.isin(['train', 'dev'])]
 

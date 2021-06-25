@@ -7,9 +7,10 @@ USR := $(shell whoami | head -c 2)
 
 # subject id
 SID := 661
-ELIST :=  $(shell seq 1 115)
-SID := 662
-ELIST :=  $(shell seq 1 100)
+ELIST :=  $(shell seq 1 1)
+# ELIST :=  $(shell seq 1 115)
+# SID := 662
+# ELIST :=  $(shell seq 1 100)
 # SID := 717
 # ELIST :=  $(shell seq 1 255)
 # SID := 723
@@ -41,12 +42,12 @@ PRED_COL := bart_target_prob
 PD = $(shell echo ${PRED_COL} | head -c 4)
 
 # datum
-# DS := podcast-datum-glove-50d.csv
-DS := podcast-datum-gpt2-xl-c_1024-previous-pca_50d.csv
+DS := podcast-datum-glove-50d.csv
+# DS := podcast-datum-gpt2-xl-c_1024-previous-pca_50d.csv
 
 # SE := 5000-sig-elec-50d-onethresh-01.csv
-SE := bobbi_new.csv
-FOLD_IDX := $(shell seq 0 4)
+# SE := bobbi_new.csv
+FOLD_IDX := $(shell seq 0 0)
 REP := --replication
 NW := nonWords
 WV := all
@@ -58,8 +59,11 @@ GPT2 := 1
 GLOVE := 1
 MWF := 1
 # SH := --shuffle
-# PSH := --phase-shuffle
+PSH := --phase-shuffle
 # PIL := mturk
+JAR_NAME := arbitrary
+# {arbitrary | glove | gpt2}
+PRJCT_ID := podcast
 
 PDIR := $(shell dirname `pwd`)
 link-data:
@@ -137,6 +141,8 @@ encoding-perm-cluster-rep:
 		for elec in $(ELIST); do \
 			# for jobid in $(shell seq 1 1); do \
 				$(CMD) code/podenc_$(FILE).py \
+					--project-id $(PRJCT_ID) \
+					--jar-name $(JAR_NAME) \
 					--sid $(SID) \
 					--electrodes $$elec \
 					--datum-emb-fn $(DS) \
@@ -153,7 +159,7 @@ encoding-perm-cluster-rep:
 					$(SH) \
 					$(PSH) \
 					$(REP) \
-					--output-parent-dir 20210602-paper-review-label-shuffle \
+					--output-parent-dir mariano-test \
 					--output-prefix '' \
 					# --job-id $$jobid; \
 			# done; \
