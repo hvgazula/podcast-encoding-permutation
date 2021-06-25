@@ -13,7 +13,7 @@ from podenc_utils import (append_jobid_to_string, create_output_directory,
                           encoding_regression, encoding_regression_pr,
                           load_header)
 from scipy.io import loadmat
-from utils import main_timer, write_config, load_pickle
+from utils import load_pickle, main_timer, write_config
 
 
 def setup_environ(args):

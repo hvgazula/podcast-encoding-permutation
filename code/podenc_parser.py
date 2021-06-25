@@ -47,21 +47,15 @@ def parse_arguments():
     parser.add_argument('--replication', action='store_true', default=False)
     parser.add_argument('--fold-idx', type=int, default=None)
 
-    custom_args = ['--project-id', 'podcast',
-                    '--jar-name', 'arbitrary',
-                     '--sid', '661',
-                     '--electrodes', '1',
-                      '--datum-emb-fn', 'podcast-datum-glove-50d.csv',
-                       '--window-size', '200',
-                       '--word-value', 'all',
-                        '--nonWords',
-                         '--glove', '1', '--gpt2', '1',
-                          '--npermutations', '1',
-                           '--lags', '-2000', '-1000', '0', '1000', '2000',
-                            '--min-word-freq', '1', '--fold-idx', '0',
-                             '--phase-shuffle',
-                             '--replication',
-                              '--output-parent-dir', 'mariano-test']
+    custom_args = [
+        '--project-id', 'podcast', '--jar-name', 'arbitrary', '--sid', '661',
+        '--electrodes', '1', '--datum-emb-fn', 'podcast-datum-glove-50d.csv',
+        '--window-size', '200', '--word-value', 'all', '--nonWords', '--glove',
+        '1', '--gpt2', '1', '--npermutations', '1', '--lags', '-2000', '-1000',
+        '0', '1000', '2000', '--min-word-freq', '1', '--fold-idx', '0',
+        '--phase-shuffle', '--replication', '--output-parent-dir',
+        'mariano-test'
+    ]
 
     args = parser.parse_args(custom_args)
 
